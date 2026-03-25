@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  --color-blush: #e8c4c4;
+  --color-blush-light: #f5e6e0;
+  --color-blush-dark: #d4a0a0;
+  --color-sage: #2d5a27;
+  --color-sage-light: #4a7c44;
+  --color-cream: #fdf8f4;
+  --color-gold: #c9a84c;
+  --font-serif: var(--font-serif), "Cormorant Garamond", Georgia, serif;
+  --font-calligraphy: var(--font-script), "Pinyon Script", cursive;
+}
+
+body {
+  background-color: var(--color-cream);
+}
+
+/* Elements start hidden — GSAP reveals them */
+.gsap-hidden {
+  visibility: hidden;
+}
+
+/* Petal particles — CSS for the infinite loop, GSAP for entrance */
+.petal-particle {
+  position: absolute;
+  border-radius: 50% 0 50% 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* Sparkle dots */
+.sparkle-dot {
+  position: absolute;
+  background: radial-gradient(circle, #f0d8a8 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
