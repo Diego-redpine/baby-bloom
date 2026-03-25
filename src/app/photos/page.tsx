@@ -172,7 +172,6 @@ function GuestOnboarding({ onComplete }: { onComplete: (guest: Guest) => void })
           ref={fileRef}
           type="file"
           accept="image/*"
-          capture="user"
           onChange={handlePhotoUpload}
           className="hidden"
           disabled={uploading}
@@ -372,7 +371,6 @@ export default function PhotosPage() {
             ref={fileRef}
             type="file"
             accept="image/*"
-            capture="environment"
             onChange={handleUpload}
             className="hidden"
             disabled={uploading}
