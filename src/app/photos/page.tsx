@@ -209,7 +209,7 @@ export default function PhotosPage() {
   const loadData = useCallback(async () => {
     const [photosRes, guestsRes] = await Promise.all([
       supabase.from("babyshower_photos").select("*").order("created_at", { ascending: false }),
-      supabase.from("babyshower_guests").select("*").order("created_at"),
+      supabase.from("babyshower_guests").select("*").order("created_at", { ascending: false }),
     ]);
     if (photosRes.data) setPhotos(photosRes.data);
     if (guestsRes.data) setGuests(guestsRes.data);
@@ -282,15 +282,6 @@ export default function PhotosPage() {
         <div className="mb-5">
           <div className="flex gap-3 overflow-x-auto pb-2 px-1 scrollbar-hide">
             {/* All filter */}
-            <button
-              onClick={() => setFilterGuest(null)}
-              className={`flex flex-col items-center gap-1 flex-shrink-0 ${!filterGuest ? "opacity-100" : "opacity-50"}`}
-            >
-              <div className={`w-10 h-10 rounded-full bg-sage/10 flex items-center justify-center text-sage text-[10px] font-bold border-2 ${!filterGuest ? "border-sage" : "border-transparent"}`}>
-                All
-              </div>
-              <span className="text-[9px] text-sage/60 w-10 truncate text-center">Everyone</span>
-            </button>
             {guests.map((g) => (
               <button
                 key={g.id}
@@ -303,6 +294,16 @@ export default function PhotosPage() {
                 <span className="text-[9px] text-sage/60 w-10 truncate text-center">{g.name.split(" ")[0]}</span>
               </button>
             ))}
+            {/* All filter — at the end */}
+            <button
+              onClick={() => setFilterGuest(null)}
+              className={`flex flex-col items-center gap-1 flex-shrink-0 ${!filterGuest ? "opacity-100" : "opacity-50"}`}
+            >
+              <div className={`w-10 h-10 rounded-full bg-sage/10 flex items-center justify-center text-sage text-[10px] font-bold border-2 ${!filterGuest ? "border-sage" : "border-transparent"}`}>
+                All
+              </div>
+              <span className="text-[9px] text-sage/60 w-10 truncate text-center">Everyone</span>
+            </button>
           </div>
         </div>
       )}
