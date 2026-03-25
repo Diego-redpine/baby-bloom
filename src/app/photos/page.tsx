@@ -321,26 +321,22 @@ export default function PhotosPage() {
               <button
                 key={photo.id}
                 onClick={() => setViewPhoto(photo.photo_url)}
-                className="bg-white rounded-lg shadow-md p-2 pb-3 hover:shadow-lg transition-shadow text-left"
+                className="bg-white rounded-lg shadow-md p-2 pb-2.5 hover:shadow-lg transition-shadow text-left"
               >
                 {/* Photo */}
-                <div className="aspect-square rounded overflow-hidden mb-2 relative">
+                <div className="aspect-square rounded overflow-hidden">
                   <img
                     src={photo.photo_url}
                     alt="Memory"
                     className="w-full h-full object-cover"
                   />
-                  {/* Uploader avatar — bottom right corner */}
-                  {photoGuest && (
-                    <div className="absolute bottom-1.5 right-1.5 rounded-full border-2 border-white shadow-sm">
-                      <GuestAvatar guest={photoGuest} size={28} />
-                    </div>
-                  )}
                 </div>
-                {/* Caption area */}
-                <p className="text-[11px] text-sage/50 px-0.5 truncate">
-                  {photo.guest_name || "Guest"}
-                </p>
+                {/* Polaroid bottom — avatar in white space */}
+                {photoGuest && (
+                  <div className="pt-1.5 pl-0.5">
+                    <GuestAvatar guest={photoGuest} size={20} />
+                  </div>
+                )}
               </button>
             );
           })}
