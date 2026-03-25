@@ -2,6 +2,7 @@ node_modules/
 .next/
 out/
 .env*.local
-*.jpeg
-*.png
 .playwright-mcp/
+baby-bloom-*.jpeg
+baby-bloom-*.png
+photos-*.jpeg
