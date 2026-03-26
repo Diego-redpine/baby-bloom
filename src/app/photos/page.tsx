@@ -219,13 +219,17 @@ export default function PhotosPage() {
     if (guest) loadData();
   }, [guest, loadData]);
 
-  // Realtime subscription for new photos
+  // Realtime subscription for new photos — deduplicate by id
   useEffect(() => {
     if (!guest) return;
     const channel = supabase
       .channel("photos-realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "babyshower_photos" }, (payload) => {
-        setPhotos((prev) => [payload.new as Photo, ...prev]);
+        const newPhoto = payload.new as Photo;
+        setPhotos((prev) => {
+          if (prev.some(p => p.id === newPhoto.id)) return prev;
+          return [newPhoto, ...prev];
+        });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
