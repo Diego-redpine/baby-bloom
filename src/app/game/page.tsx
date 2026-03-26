@@ -1,22 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { getGuest, type Guest } from "@/lib/guest";
 
 const questions = [
-  { key: "birth_date", label: "When will the baby be born?", type: "date", icon: "" },
-  { key: "birth_weight", label: "How much will the baby weigh?", type: "text", placeholder: "e.g. 7 lbs 4 oz", icon: "" },
-  { key: "baby_name", label: "What will baby's name be?", type: "text", placeholder: "Your guess...", icon: "" },
-  { key: "looks_like", label: "Who will baby look like?", type: "text", placeholder: "Mom, Dad, or...", icon: "" },
-  { key: "birth_time", label: "What time will baby be born?", type: "time", icon: "" },
+  { key: "birth_date", label: "When will the baby be born?", type: "date" },
+  { key: "birth_weight", label: "How much will the baby weigh?", type: "text", placeholder: "e.g. 7 lbs 4 oz" },
+  { key: "baby_name", label: "What will baby's name be?", type: "text", placeholder: "Your guess..." },
+  { key: "looks_like", label: "Who will the baby look like more?", type: "choice" },
+  { key: "birth_time", label: "What time will baby be born?", type: "time" },
 ];
 
 export default function GamePage() {
-  const [step, setStep] = useState(0); // 0 = name entry, 1-5 = questions, 6 = done
+  const [guest, setGuest] = useState<Guest | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [step, setStep] = useState(0); // 0 = name entry (if no guest), 1-5 = questions, 6 = done
   const [name, setName] = useState("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [choiceFlash, setChoiceFlash] = useState<string | null>(null);
+
+  // Check for existing guest identity on mount
+  useEffect(() => {
+    const existing = getGuest();
+    if (existing) {
+      setGuest(existing);
+      setName(existing.name);
+      setStep(1); // Skip name entry, go straight to questions
+    }
+    setLoaded(true);
+  }, []);
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -28,13 +43,25 @@ export default function GamePage() {
     setSubmitting(false);
   }
 
-  // Name entry
+  function handleChoiceSelect(value: string) {
+    setChoiceFlash(value);
+    setAnswers((prev) => ({ ...prev, looks_like: value }));
+    // Flash the color briefly, then advance
+    setTimeout(() => {
+      setChoiceFlash(null);
+      setStep(step + 1);
+    }, 600);
+  }
+
+  if (!loaded) return null;
+
+  // Name entry — only shown if no existing guest identity
   if (step === 0) {
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6">
         <Link href="/" className="absolute top-6 left-6 text-sage/50 text-sm">&larr; Back</Link>
         <div className="w-10 h-10 rounded-full bg-sage/10 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-sage mb-2">Baby Guessing Game</h1>
+        <h1 className="text-2xl font-bold text-sage mb-2" style={{ fontFamily: "var(--font-serif)" }}>Baby Guessing Game</h1>
         <p className="text-sage/60 text-sm mb-8 text-center">
           Answer 5 questions about the baby!
         </p>
@@ -44,6 +71,7 @@ export default function GamePage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="w-full max-w-xs py-3 px-4 rounded-xl border-2 border-blush bg-white text-sage text-center text-lg focus:outline-none focus:border-sage transition-colors"
+          autoFocus
         />
         <button
           onClick={() => name.trim() && setStep(1)}
@@ -61,7 +89,7 @@ export default function GamePage() {
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6 text-center">
         <div className="w-12 h-12 rounded-full bg-blush mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-sage mb-2">Thanks, {name}!</h1>
+        <h1 className="text-2xl font-bold text-sage mb-2" style={{ fontFamily: "var(--font-serif)" }}>Thanks, {name}!</h1>
         <p className="text-sage/60 mb-8">
           Your guesses have been submitted. We&apos;ll reveal the results at the party!
         </p>
@@ -97,10 +125,39 @@ export default function GamePage() {
 
       {/* Question card */}
       <div className="w-full max-w-xs bg-white rounded-2xl shadow-lg p-6 text-center">
-        <div className="text-4xl mb-3">{q.icon}</div>
-        <h2 className="text-lg font-bold text-sage mb-4">{q.label}</h2>
+        <h2 className="text-lg font-bold text-sage mb-4" style={{ fontFamily: "var(--font-serif)" }}>{q.label}</h2>
 
-        {q.type === "date" ? (
+        {q.type === "choice" ? (
+          /* Adamary or Juan — A/B choice with color flash */
+          <div className="flex gap-3">
+            <button
+              onClick={() => handleChoiceSelect("Adamary")}
+              disabled={choiceFlash !== null}
+              className={`flex-1 py-4 rounded-xl font-semibold text-base transition-all duration-300 ${
+                choiceFlash === "Adamary"
+                  ? "bg-pink-400 text-white scale-105 shadow-md"
+                  : currentAnswer === "Adamary"
+                  ? "bg-pink-100 text-pink-700 border-2 border-pink-300"
+                  : "bg-cream text-sage border-2 border-blush hover:border-pink-300"
+              }`}
+            >
+              Adamary
+            </button>
+            <button
+              onClick={() => handleChoiceSelect("Juan")}
+              disabled={choiceFlash !== null}
+              className={`flex-1 py-4 rounded-xl font-semibold text-base transition-all duration-300 ${
+                choiceFlash === "Juan"
+                  ? "bg-blue-400 text-white scale-105 shadow-md"
+                  : currentAnswer === "Juan"
+                  ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
+                  : "bg-cream text-sage border-2 border-blush hover:border-blue-300"
+              }`}
+            >
+              Juan
+            </button>
+          </div>
+        ) : q.type === "date" ? (
           <input
             type="date"
             value={currentAnswer}
@@ -127,38 +184,53 @@ export default function GamePage() {
               setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))
             }
             className="w-full py-3 px-4 rounded-xl border-2 border-blush bg-cream text-sage text-center focus:outline-none focus:border-sage transition-colors"
+            autoFocus
           />
         )}
       </div>
 
-      {/* Navigation */}
-      <div className="flex gap-3 mt-6 w-full max-w-xs">
-        {step > 1 && (
+      {/* Navigation — hidden during choice flash, and skip Next for choice type */}
+      {q.type !== "choice" && (
+        <div className="flex gap-3 mt-6 w-full max-w-xs">
+          {step > 1 && (
+            <button
+              onClick={() => setStep(step - 1)}
+              className="flex-1 py-3 bg-blush-light text-sage font-semibold rounded-xl"
+            >
+              Back
+            </button>
+          )}
+          {step < questions.length ? (
+            <button
+              onClick={() => currentAnswer.trim() && setStep(step + 1)}
+              disabled={!currentAnswer.trim()}
+              className="flex-1 py-3 bg-sage text-cream font-semibold rounded-xl disabled:opacity-40 transition-opacity"
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={!currentAnswer.trim() || submitting}
+              className="flex-1 py-3 bg-sage text-cream font-semibold rounded-xl disabled:opacity-40 transition-opacity"
+            >
+              {submitting ? "Submitting..." : "Submit"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Back button still available during choice question */}
+      {q.type === "choice" && step > 1 && !choiceFlash && (
+        <div className="flex gap-3 mt-6 w-full max-w-xs">
           <button
             onClick={() => setStep(step - 1)}
             className="flex-1 py-3 bg-blush-light text-sage font-semibold rounded-xl"
           >
             Back
           </button>
-        )}
-        {step < questions.length ? (
-          <button
-            onClick={() => currentAnswer.trim() && setStep(step + 1)}
-            disabled={!currentAnswer.trim()}
-            className="flex-1 py-3 bg-sage text-cream font-semibold rounded-xl disabled:opacity-40 transition-opacity"
-          >
-            Next
-          </button>
-        ) : (
-          <button
-            onClick={handleSubmit}
-            disabled={!currentAnswer.trim() || submitting}
-            className="flex-1 py-3 bg-sage text-cream font-semibold rounded-xl disabled:opacity-40 transition-opacity"
-          >
-            {submitting ? "Submitting..." : "Submit"}
-          </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

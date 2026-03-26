@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { getGuest, saveGuest, AVATAR_COLORS, type Guest } from "@/lib/guest";
+import { getGuest, saveGuest, clearGuest, AVATAR_COLORS, type Guest } from "@/lib/guest";
 import { Facehash } from "facehash";
 
 interface Photo {
@@ -279,7 +279,12 @@ export default function PhotosPage() {
         <div className="flex items-center justify-between px-1">
           <Link href="/" className="text-sage/50 text-sm">&larr; Back</Link>
           <h1 className="text-lg font-bold text-sage" style={{ fontFamily: "var(--font-serif)" }}>Share your memories</h1>
-          <div className="w-10" /> {/* spacer for centering */}
+          <button
+            onClick={() => { clearGuest(); setGuest(null); }}
+            className="text-sage/40 text-[10px]"
+          >
+            Not you?
+          </button>
         </div>
       </div>
 
