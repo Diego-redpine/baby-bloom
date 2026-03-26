@@ -273,11 +273,14 @@ export default function PhotosPage() {
     : photos;
 
   return (
-    <div className="min-h-screen bg-cream px-4 pb-28">
-      {/* Header */}
-      <div className="pt-6 pb-4 text-center">
-        <Link href="/" className="text-sage/50 text-sm">&larr; Back</Link>
-        <h1 className="text-xl font-bold text-sage mt-2" style={{ fontFamily: "var(--font-serif)" }}>Share your memories</h1>
+    <div className="min-h-screen bg-cream px-4 pb-36">
+      {/* Header — sticky so page context is always visible */}
+      <div className="sticky top-0 z-20 bg-cream pt-4 pb-3 text-center">
+        <div className="flex items-center justify-between px-1">
+          <Link href="/" className="text-sage/50 text-sm">&larr; Back</Link>
+          <h1 className="text-lg font-bold text-sage" style={{ fontFamily: "var(--font-serif)" }}>Share your memories</h1>
+          <div className="w-10" /> {/* spacer for centering */}
+        </div>
       </div>
 
       {/* Guest profile avatars — horizontal scroll filter */}
@@ -294,7 +297,7 @@ export default function PhotosPage() {
                 <div className={`rounded-full border-2 p-0.5 ${filterGuest === g.id ? "border-sage" : "border-transparent"}`}>
                   <GuestAvatar guest={g} size={36} />
                 </div>
-                <span className="text-[9px] text-sage/60 w-10 truncate text-center">{g.name.split(" ")[0]}</span>
+                <span className="text-[9px] text-sage/60 w-14 truncate text-center">{g.name.split(" ")[0]}</span>
               </button>
             ))}
             {/* All filter — at the end */}
@@ -305,7 +308,7 @@ export default function PhotosPage() {
               <div className={`w-10 h-10 rounded-full bg-sage/10 flex items-center justify-center text-sage text-[10px] font-bold border-2 ${!filterGuest ? "border-sage" : "border-transparent"}`}>
                 All
               </div>
-              <span className="text-[9px] text-sage/60 w-10 truncate text-center">Everyone</span>
+              <span className="text-[9px] text-sage/60 w-14 text-center">Everyone</span>
             </button>
           </div>
         </div>
@@ -360,7 +363,7 @@ export default function PhotosPage() {
       {/* Floating camera button */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30">
         <label className="cursor-pointer">
-          <div className="bg-sage text-cream font-semibold py-3.5 px-8 rounded-full shadow-lg hover:bg-sage-light transition-all flex items-center gap-2 text-base">
+          <div className="bg-sage text-cream font-semibold py-3 px-6 rounded-full shadow-lg hover:bg-sage-light transition-all flex items-center gap-2 text-sm">
             {uploading ? (
               <span className="animate-pulse">Uploading...</span>
             ) : (
