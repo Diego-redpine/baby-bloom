@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { getValidatedGuest, type Guest } from "@/lib/guest";
 import { useLanguage } from "@/lib/LanguageContext";
+import { GuestOnboarding } from "@/components/GuestOnboarding";
 
 type Screen = "loading" | "no-profile" | "prompt" | "ready" | "recording" | "preview" | "submitting" | "done";
 type Mode = "video" | "audio";
@@ -295,35 +296,13 @@ export default function CapsulePage() {
 
   if (!loaded) return null;
 
-  // No profile screen
+  // No profile — show inline onboarding
   if (screen === "no-profile") {
     return (
-      <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-5">
-        <Link href="/" className="absolute top-6 left-6 text-sage/50 text-sm">
-          &larr; {t("common.back")}
-        </Link>
-        <div className="w-14 h-14 rounded-full bg-sage/10 flex items-center justify-center mx-auto mb-4">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2d5a27" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        </div>
-        <h1
-          className="text-2xl font-bold text-sage mb-2"
-          style={{ fontFamily: "var(--font-serif)" }}
-        >
-          {t("capsule.noProfile")}
-        </h1>
-        <p className="text-sage/60 text-sm mb-8 text-center max-w-xs">
-          {t("capsule.noProfileDesc")}
-        </p>
-        <Link
-          href="/photos"
-          className="py-3 px-8 bg-sage text-cream font-semibold rounded-xl"
-        >
-          {t("capsule.goToPhotos")}
-        </Link>
-      </div>
+      <GuestOnboarding onComplete={(g) => {
+        setGuest(g);
+        setScreen("prompt");
+      }} />
     );
   }
 
