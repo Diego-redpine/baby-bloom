@@ -25,7 +25,7 @@ export function GuestOnboarding({ onComplete }: { onComplete: (guest: Guest) => 
     const fileName = `avatar-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from("babyshower-photos").upload(fileName, file);
     if (error) {
-      alert("Upload failed, try again!");
+      alert(t("common.uploadFailed"));
       setUploading(false);
       return;
     }
@@ -51,7 +51,7 @@ export function GuestOnboarding({ onComplete }: { onComplete: (guest: Guest) => 
       .single();
 
     if (error || !data) {
-      alert("Something went wrong, please try again.");
+      alert(t("common.somethingWrong"));
       setFinishing(false);
       return;
     }

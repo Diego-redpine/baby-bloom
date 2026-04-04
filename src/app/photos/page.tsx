@@ -96,7 +96,7 @@ export default function PhotosPage() {
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from("babyshower-photos").upload(fileName, file);
     if (error) {
-      alert("Upload failed, please try again!");
+      alert(t("common.uploadFailed"));
       setUploading(false);
       return;
     }
@@ -141,7 +141,7 @@ export default function PhotosPage() {
         }
       }
     } catch {
-      alert("Some photos could not be saved. Try saving them individually.");
+      alert(t("photos.saveFailed"));
     } finally {
       setSavingAll(false);
     }

@@ -126,13 +126,13 @@ export default function GamePage() {
         answer: ans[q.key],
       }));
     if (rows.length === 0) {
-      alert("Please answer at least one question.");
+      alert(t("common.answerOne"));
       setSubmitting(false);
       return;
     }
     const { error } = await supabase.from("babyshower_game_votes").insert(rows);
     if (error) {
-      alert("Something went wrong submitting your answers. Please try again.");
+      alert(t("common.submitError"));
       setSubmitting(false);
       return;
     }
@@ -152,13 +152,13 @@ export default function GamePage() {
         answer: answers[q.key],
       }));
     if (rows.length === 0) {
-      alert("Please answer at least one question.");
+      alert(t("common.answerOne"));
       setSubmitting(false);
       return;
     }
     const { error } = await supabase.from("babyshower_game_votes").insert(rows);
     if (error) {
-      alert("Something went wrong submitting your answers. Please try again.");
+      alert(t("common.submitError"));
       setSubmitting(false);
       return;
     }
@@ -288,7 +288,7 @@ export default function GamePage() {
         {q.type === "freetext" && (
           <input
             type="text"
-            placeholder="Your answer..."
+            placeholder={t("game.placeholder")}
             value={currentAnswer}
             onChange={(e) =>
               setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))

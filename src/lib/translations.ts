@@ -384,6 +384,52 @@ const translations = {
     en: "Back to Home",
     es: "Volver al Inicio",
   },
+  "common.uploadFailed": {
+    en: "Upload failed, please try again.",
+    es: "Error al subir, intenta de nuevo.",
+  },
+  "common.somethingWrong": {
+    en: "Something went wrong, please try again.",
+    es: "Algo salio mal, intenta de nuevo.",
+  },
+  "common.submitError": {
+    en: "Something went wrong submitting your answers. Please try again.",
+    es: "Algo salio mal al enviar tus respuestas. Intenta de nuevo.",
+  },
+  "common.answerOne": {
+    en: "Please answer at least one question.",
+    es: "Por favor responde al menos una pregunta.",
+  },
+
+  // ── Capsule extras ──
+  "capsule.title": {
+    en: "Time Capsule",
+    es: "Capsula del Tiempo",
+  },
+  "capsule.cameraError": {
+    en: "Camera access was denied. Please allow camera and microphone access in your browser settings and try again.",
+    es: "Se denego el acceso a la camara. Permite el acceso a la camara y microfono en la configuracion de tu navegador e intenta de nuevo.",
+  },
+  "capsule.micError": {
+    en: "Microphone access was denied. Please allow microphone access in your browser settings and try again.",
+    es: "Se denego el acceso al microfono. Permite el acceso al microfono en la configuracion de tu navegador e intenta de nuevo.",
+  },
+  "capsule.noProfileDesc": {
+    en: "Visit the Photos page to create your profile first.",
+    es: "Visita la pagina de Fotos para crear tu perfil primero.",
+  },
+
+  // ── Game extras ──
+  "game.placeholder": {
+    en: "Your answer...",
+    es: "Tu respuesta...",
+  },
+
+  // ── Photos extras ──
+  "photos.saveFailed": {
+    en: "Some photos could not be saved. Try saving them individually.",
+    es: "Algunas fotos no se pudieron guardar. Intenta guardarlas individualmente.",
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

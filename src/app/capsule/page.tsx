@@ -204,8 +204,8 @@ export default function CapsulePage() {
     } catch {
       setPermissionError(
         selectedMode === "video"
-          ? "Camera access was denied. Please allow camera and microphone access in your browser settings and try again."
-          : "Microphone access was denied. Please allow microphone access in your browser settings and try again."
+          ? t("capsule.cameraError")
+          : t("capsule.micError")
       );
       setScreen("prompt");
     }
@@ -260,7 +260,7 @@ export default function CapsulePage() {
       .upload(fileName, recordedBlob);
 
     if (uploadError) {
-      alert("Upload failed, please try again.");
+      alert(t("common.uploadFailed"));
       setScreen("preview");
       return;
     }
@@ -274,7 +274,7 @@ export default function CapsulePage() {
     });
 
     if (insertError) {
-      alert("Something went wrong, please try again.");
+      alert(t("common.somethingWrong"));
       setScreen("preview");
       return;
     }
@@ -327,7 +327,7 @@ export default function CapsulePage() {
           className="text-2xl font-bold text-sage mb-4"
           style={{ fontFamily: "var(--font-serif)" }}
         >
-          Time Capsule
+          {t("capsule.title")}
         </h1>
         <p className="text-sage/70 text-sm text-center italic max-w-xs mb-8">
           {t("capsule.prompt")}
