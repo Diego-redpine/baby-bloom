@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { getGuest, saveGuest, clearGuest, AVATAR_COLORS, type Guest } from "@/lib/guest";
-import { Facehash } from "facehash";
+import { getGuest, clearGuest, type Guest } from "@/lib/guest";
+import { GuestAvatar } from "@/components/GuestAvatar";
+import { GuestOnboarding } from "@/components/GuestOnboarding";
 
 interface Photo {
   id: string;
@@ -21,172 +22,6 @@ interface GuestRecord {
   avatar_color: string | null;
 }
 
-/* ── Avatar component ── */
-function GuestAvatar({ guest, size = 40 }: { guest: { name: string; avatar_url?: string | null; avatar_color?: string | null }; size?: number }) {
-  if (guest.avatar_url) {
-    return (
-      <img
-        src={guest.avatar_url}
-        alt={guest.name}
-        className="rounded-full object-cover"
-        style={{ width: size, height: size }}
-      />
-    );
-  }
-  const palette = AVATAR_COLORS.find(c => c.name === guest.avatar_color) || AVATAR_COLORS[0];
-  return (
-    <div className="rounded-full overflow-hidden" style={{ width: size, height: size }}>
-      <Facehash
-        name={guest.name}
-        size={size}
-        colors={palette.colors}
-        intensity3d="medium"
-        style={{ borderRadius: "50%" }}
-      />
-    </div>
-  );
-}
-
-/* ── Onboarding flow ── */
-function GuestOnboarding({ onComplete }: { onComplete: (guest: Guest) => void }) {
-  const [step, setStep] = useState<"name" | "avatar">("name");
-  const [name, setName] = useState("");
-  const [avatarType, setAvatarType] = useState<"default" | "custom">("default");
-  const [selectedColor, setSelectedColor] = useState(AVATAR_COLORS[0].name);
-  const [customUrl, setCustomUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    const ext = file.name.split(".").pop();
-    const fileName = `avatar-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from("babyshower-photos").upload(fileName, file);
-    if (error) {
-      alert("Upload failed, try again!");
-      setUploading(false);
-      return;
-    }
-    const { data: { publicUrl } } = supabase.storage.from("babyshower-photos").getPublicUrl(fileName);
-    setCustomUrl(publicUrl);
-    setAvatarType("custom");
-    setUploading(false);
-  }
-
-  async function handleFinish() {
-    const { data } = await supabase
-      .from("babyshower_guests")
-      .insert({
-        name,
-        avatar_url: avatarType === "custom" ? customUrl : null,
-        avatar_color: avatarType === "default" ? selectedColor : null,
-      })
-      .select()
-      .single();
-
-    if (data) {
-      const guest: Guest = {
-        id: data.id,
-        name: data.name,
-        avatar_url: data.avatar_url,
-        avatar_color: data.avatar_color,
-      };
-      saveGuest(guest);
-      onComplete(guest);
-    }
-  }
-
-  if (step === "name") {
-    return (
-      <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6">
-        <div className="text-4xl mb-4" style={{ fontFamily: "var(--font-calligraphy)", color: "#d4a0a0" }}>*</div>
-        <h1 className="text-2xl font-bold text-sage mb-2" style={{ fontFamily: "var(--font-serif)" }}>Welcome</h1>
-        <p className="text-sage/60 text-sm mb-8 text-center">
-          Enter your name to start sharing memories
-        </p>
-        <input
-          type="text"
-          placeholder="Your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full max-w-xs py-3 px-4 rounded-xl border-2 border-blush bg-white text-sage text-center text-lg focus:outline-none focus:border-sage transition-colors"
-          autoFocus
-        />
-        <button
-          onClick={() => name.trim() && setStep("avatar")}
-          disabled={!name.trim()}
-          className="mt-4 w-full max-w-xs py-3 bg-sage text-cream font-semibold rounded-xl disabled:opacity-40 transition-opacity"
-        >
-          Next
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6">
-      <h1 className="text-2xl font-bold text-sage mb-2" style={{ fontFamily: "var(--font-serif)" }}>Choose your look</h1>
-      <p className="text-sage/60 text-sm mb-6 text-center">
-        Pick a color or upload a photo
-      </p>
-
-      {/* Preview */}
-      <div className="mb-6">
-        <GuestAvatar
-          guest={{ name, avatar_url: avatarType === "custom" ? customUrl : null, avatar_color: selectedColor }}
-          size={80}
-        />
-      </div>
-
-      {/* Color options — 8 grid */}
-      <p className="text-sage/50 text-xs mb-3 uppercase tracking-wider">Default avatars</p>
-      <div className="grid grid-cols-4 gap-3 mb-6">
-        {AVATAR_COLORS.map((c) => (
-          <button
-            key={c.name}
-            onClick={() => { setSelectedColor(c.name); setAvatarType("default"); }}
-            className={`w-14 h-14 rounded-full overflow-hidden border-2 transition-all ${
-              avatarType === "default" && selectedColor === c.name
-                ? "border-sage scale-110 shadow-md"
-                : "border-transparent"
-            }`}
-          >
-            <Facehash name={name || "Guest"} size={52} colors={c.colors} intensity3d="medium" style={{ borderRadius: "50%" }} />
-          </button>
-        ))}
-      </div>
-
-      {/* Upload option */}
-      <p className="text-sage/50 text-xs mb-3 uppercase tracking-wider">Or use your own</p>
-      <label className="cursor-pointer mb-6">
-        <div className={`py-2.5 px-6 rounded-xl text-center text-sm font-semibold transition-all ${
-          avatarType === "custom" && customUrl
-            ? "bg-sage text-cream"
-            : "bg-blush text-sage border border-blush-dark/20"
-        }`}>
-          {uploading ? "Uploading..." : customUrl ? "Photo uploaded" : "Upload Photo"}
-        </div>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          onChange={handlePhotoUpload}
-          className="hidden"
-          disabled={uploading}
-        />
-      </label>
-
-      <button
-        onClick={handleFinish}
-        className="w-full max-w-xs py-3 bg-sage text-cream font-semibold rounded-xl transition-opacity"
-      >
-        Let&apos;s Go!
-      </button>
-    </div>
-  );
-}
 
 /* ── Main Photos Page ── */
 export default function PhotosPage() {
@@ -197,7 +32,23 @@ export default function PhotosPage() {
   const [filterGuest, setFilterGuest] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [viewPhoto, setViewPhoto] = useState<string | null>(null);
+  const [savingAll, setSavingAll] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  async function downloadPhoto(url: string, name: string) {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      // CORS fallback — open in new tab so user can save manually
+      window.open(url, "_blank");
+    }
+  }
 
   // Check for existing guest identity
   useEffect(() => {
@@ -276,6 +127,24 @@ export default function PhotosPage() {
     ? photos.filter(p => p.guest_id === filterGuest)
     : photos;
 
+  async function saveAllPhotos() {
+    setSavingAll(true);
+    try {
+      for (let i = 0; i < displayPhotos.length; i++) {
+        const photo = displayPhotos[i];
+        const ext = photo.photo_url.split(".").pop()?.split("?")[0] || "jpg";
+        await downloadPhoto(photo.photo_url, `baby-bloom-${i + 1}.${ext}`);
+        if (i < displayPhotos.length - 1) {
+          await new Promise((r) => setTimeout(r, 500));
+        }
+      }
+    } catch {
+      alert("Some photos could not be saved. Try saving them individually.");
+    } finally {
+      setSavingAll(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-cream px-4 pb-36">
       {/* Header — sticky so page context is always visible */}
@@ -290,6 +159,16 @@ export default function PhotosPage() {
             Not you?
           </button>
         </div>
+        {displayPhotos.length > 0 && (
+          <button
+            onClick={saveAllPhotos}
+            disabled={savingAll}
+            className="mt-2 py-2 px-5 bg-sage text-cream text-sm font-semibold rounded-xl disabled:opacity-40 transition-opacity"
+            style={{ fontFamily: "var(--font-serif)" }}
+          >
+            {savingAll ? "Saving..." : "Save All Photos"}
+          </button>
+        )}
       </div>
 
       {/* Guest profile avatars — horizontal scroll filter */}
@@ -334,26 +213,37 @@ export default function PhotosPage() {
           {displayPhotos.map((photo) => {
             const photoGuest = getPhotoGuest(photo);
             return (
-              <button
+              <div
                 key={photo.id}
-                onClick={() => setViewPhoto(photo.photo_url)}
-                className="bg-white rounded-lg shadow-md p-2 pb-2.5 hover:shadow-lg transition-shadow text-left"
+                className="bg-white rounded-lg shadow-md p-2 pb-2.5 hover:shadow-lg transition-shadow"
               >
-                {/* Photo */}
-                <div className="aspect-square rounded overflow-hidden">
+                {/* Photo — tap to view fullscreen */}
+                <div
+                  className="aspect-square rounded overflow-hidden cursor-pointer"
+                  onClick={() => setViewPhoto(photo.photo_url)}
+                >
                   <img
                     src={photo.photo_url}
                     alt="Memory"
                     className="w-full h-full object-cover"
                   />
                 </div>
-                {/* Polaroid bottom — avatar in white space */}
-                {photoGuest && (
-                  <div className="pt-1.5 pl-0.5">
-                    <GuestAvatar guest={photoGuest} size={20} />
+                {/* Polaroid bottom — avatar + download */}
+                <div className="pt-1.5 px-0.5 flex items-center justify-between">
+                  <div>
+                    {photoGuest && <GuestAvatar guest={photoGuest} size={20} />}
                   </div>
-                )}
-              </button>
+                  <button
+                    onClick={() => {
+                      const ext = photo.photo_url.split(".").pop()?.split("?")[0] || "jpg";
+                      downloadPhoto(photo.photo_url, `baby-bloom-${photo.id.slice(0, 8)}.${ext}`);
+                    }}
+                    className="text-[10px] text-sage/40 hover:text-sage/70 font-semibold transition-colors min-h-[44px] min-w-[44px] flex items-center justify-end"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
             );
           })}
         </div>

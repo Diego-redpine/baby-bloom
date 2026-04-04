@@ -3,53 +3,73 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
-interface Guess {
+interface Vote {
   id: string;
+  guest_id: string;
   guest_name: string;
-  birth_date: string | null;
-  birth_weight: string | null;
-  baby_name: string | null;
-  looks_like: string | null;
-  birth_time: string | null;
+  question_key: string;
+  answer: string;
 }
 
-const questionLabels = [
-  { key: "birth_date", label: "When will baby be born?", icon: "📅" },
-  { key: "birth_weight", label: "How much will baby weigh?", icon: "⚖️" },
-  { key: "baby_name", label: "What will baby's name be?", icon: "💝" },
-  { key: "looks_like", label: "Who will baby look like?", icon: "👶" },
-  { key: "birth_time", label: "What time will baby be born?", icon: "🕐" },
+const questions = [
+  { key: "first_word", label: "What will her first word be?", type: "freetext" },
+  { key: "mamas_or_daddys", label: "Mama's girl or Daddy's girl?", type: "thisorthat", options: ["Mama's girl", "Daddy's girl"] },
+  { key: "hair_amount", label: "How much hair is she coming in with?", type: "multiplechoice", options: ["Completely bald", "A little fuzz", "A full head", "Enough for a bow already"] },
+  { key: "personality", label: "Calm and chill or Loud and dramatic?", type: "thisorthat", options: ["Calm and chill", "Loud and dramatic"] },
+  { key: "career", label: "What will she be when she grows up?", type: "freetext" },
+  { key: "trouble_age", label: "How old will she be when she gives her parents the most trouble?", type: "multiplechoice", options: ["Terrible twos", "Moody middle school", "Teenage years", "She'll be an angel forever"] },
+  { key: "sleep_pattern", label: "Night owl or Early bird?", type: "thisorthat", options: ["Night owl", "Early bird"] },
+  { key: "advice", label: "Leave her one piece of advice she'll need someday.", type: "freetext" },
 ];
 
 export default function RevealPage() {
-  const [guesses, setGuesses] = useState<Guess[]>([]);
+  const [votes, setVotes] = useState<Vote[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
     async function load() {
       const { data } = await supabase
-        .from("babyshower_guesses")
+        .from("babyshower_game_votes")
         .select("*")
         .order("created_at");
-      if (data) setGuesses(data);
+      if (data) setVotes(data);
     }
     load();
+
+    // Live updates
+    const channel = supabase
+      .channel("reveal-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "babyshower_game_votes" }, (payload) => {
+        const newVote = payload.new as Vote;
+        setVotes((prev) => {
+          if (prev.some(v => v.id === newVote.id)) return prev;
+          return [...prev, newVote];
+        });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const q = questionLabels[currentQ];
+  const q = questions[currentQ];
+  const qVotes = votes.filter((v) => v.question_key === q.key);
+  const total = qVotes.length;
+  const uniquePlayers = new Set(votes.map((v) => v.guest_id)).size;
 
   return (
     <div className="min-h-screen bg-sage flex flex-col items-center justify-center px-6 py-12">
       {/* Title */}
       <div className="text-center mb-8">
         <p className="text-cream/60 text-sm tracking-widest uppercase">Baby in Bloom</p>
-        <h1 className="text-3xl font-bold text-cream mt-1">Guessing Game Results</h1>
+        <h1 className="text-3xl font-bold text-cream mt-1" style={{ fontFamily: "var(--font-serif)" }}>
+          What&apos;s She Like?
+        </h1>
       </div>
 
       {/* Question indicator */}
-      <div className="flex gap-2 mb-8">
-        {questionLabels.map((_, i) => (
+      <div className="flex gap-2 mb-8 flex-wrap justify-center">
+        {questions.map((_, i) => (
           <button
             key={i}
             onClick={() => { setCurrentQ(i); setRevealed(false); }}
@@ -68,8 +88,10 @@ export default function RevealPage() {
 
       {/* Question card */}
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 text-center">
-        <div className="text-5xl mb-3">{q.icon}</div>
-        <h2 className="text-xl font-bold text-sage mb-6">{q.label}</h2>
+        <p className="text-xs text-sage/40 uppercase tracking-wider mb-2">
+          {q.type === "thisorthat" ? "This or That" : q.type === "multiplechoice" ? "Multiple Choice" : "Free Text"}
+        </p>
+        <h2 className="text-xl font-bold text-sage mb-6" style={{ fontFamily: "var(--font-serif)" }}>{q.label}</h2>
 
         {!revealed ? (
           <button
@@ -80,19 +102,77 @@ export default function RevealPage() {
           </button>
         ) : (
           <div className="space-y-3 max-h-80 overflow-y-auto">
-            {guesses.map((g) => (
-              <div
-                key={g.id}
-                className="flex justify-between items-center py-3 px-4 bg-cream rounded-xl"
-              >
-                <span className="font-semibold text-sage">{g.guest_name}</span>
-                <span className="text-sage/70">
-                  {g[q.key as keyof Guess] || "—"}
-                </span>
+            {/* This or That — percentage bars */}
+            {q.type === "thisorthat" && q.options && (
+              <div className="space-y-2">
+                {q.options.map((opt, i) => {
+                  const count = qVotes.filter((v) => v.answer === opt).length;
+                  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                  return (
+                    <div key={opt}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="font-semibold text-sage">{opt}</span>
+                        <span className="text-sage/50">{count} ({pct}%)</span>
+                      </div>
+                      <div className="h-4 bg-blush-light rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${pct}%`, backgroundColor: i === 0 ? "#d4a0a0" : "#4a7c44" }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-            {guesses.length === 0 && (
-              <p className="text-sage/40">No guesses yet!</p>
+            )}
+
+            {/* Multiple Choice — percentage bars */}
+            {q.type === "multiplechoice" && q.options && (
+              <div className="space-y-2">
+                {q.options.map((opt, i) => {
+                  const count = qVotes.filter((v) => v.answer === opt).length;
+                  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                  const colors = ["#2d5a27", "#4a7c44", "#c9a84c", "#d4a0a0"];
+                  return (
+                    <div key={opt}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="font-semibold text-sage">{opt}</span>
+                        <span className="text-sage/50">{count} ({pct}%)</span>
+                      </div>
+                      <div className="h-4 bg-blush-light rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${pct}%`, backgroundColor: colors[i] }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Free Text — guest answers list */}
+            {q.type === "freetext" && (
+              <div className="space-y-2 text-left">
+                {qVotes.length === 0 ? (
+                  <p className="text-sage/40 text-center">No answers yet</p>
+                ) : (
+                  qVotes.map((v) => (
+                    <div
+                      key={v.id}
+                      className="flex items-start gap-2 py-2 px-3 bg-cream rounded-xl"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-sage/10 flex items-center justify-center text-sage text-[10px] font-bold shrink-0 mt-0.5">
+                        {v.guest_name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-sage/50">{v.guest_name}</p>
+                        <p className="text-sm text-sage break-words">{v.answer}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             )}
           </div>
         )}
@@ -108,7 +188,7 @@ export default function RevealPage() {
             &larr; Previous
           </button>
         )}
-        {currentQ < questionLabels.length - 1 && (
+        {currentQ < questions.length - 1 && (
           <button
             onClick={() => { setCurrentQ(currentQ + 1); setRevealed(false); }}
             className="py-3 px-6 bg-cream text-sage font-semibold rounded-xl"
@@ -119,7 +199,7 @@ export default function RevealPage() {
       </div>
 
       <p className="mt-8 text-cream/40 text-xs">
-        {guesses.length} guests have played
+        {uniquePlayers} guest{uniquePlayers !== 1 ? "s" : ""} have played
       </p>
     </div>
   );

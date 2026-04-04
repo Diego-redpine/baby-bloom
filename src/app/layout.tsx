@@ -18,8 +18,8 @@ const pinyon = Pinyon_Script({
 
 export const metadata: Metadata = {
   title: "Baby in Bloom - Adamary y Juan",
-  description: "Baby shower for Adamary y Juan - April 4th, 2025",
-  manifest: "/manifest.json",
+  description: "Baby shower for Adamary y Juan - April 4th, 2026",
+  manifest: "/baby-bloom/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -30,7 +30,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   themeColor: "#e8c4c4",
 };
 

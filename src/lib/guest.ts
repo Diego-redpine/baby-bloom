@@ -31,7 +31,7 @@ export function clearGuest() {
 export const AVATAR_COLORS = [
   { name: "Blush", colors: ["#e8a0a0", "#d88080", "#f0c0c0", "#c07070"] },
   { name: "Sage", colors: ["#7a9a6a", "#5a7a4a", "#a0c090", "#4a6a3a"] },
-  { name: "Lavender", colors: ["#a088c0", "#8068a0", "#c0a8d8", "#6850880"] },
+  { name: "Lavender", colors: ["#a088c0", "#8068a0", "#c0a8d8", "#685088"] },
   { name: "Gold", colors: ["#c8a840", "#a88820", "#e0c868", "#907018"] },
   { name: "Sky", colors: ["#70a8d0", "#5088b0", "#98c8e8", "#386898"] },
   { name: "Coral", colors: ["#e08870", "#c06850", "#f0a890", "#a05038"] },

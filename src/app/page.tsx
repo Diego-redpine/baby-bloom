@@ -894,7 +894,10 @@ export default function Home() {
                 Share Memories
               </Link>
               <Link href="/game" className="btn-animate block w-full py-3.5 bg-sage/90 rounded-xl text-center text-cream font-semibold text-base hover:bg-sage hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                Baby Guessing Game
+                What&apos;s She Like?
+              </Link>
+              <Link href="/capsule" className="btn-animate block w-full py-3.5 bg-blush/80 backdrop-blur-sm rounded-xl text-center text-sage font-semibold text-base border border-blush-dark/20 hover:bg-blush hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                Time Capsule
               </Link>
             </div>
           </div>
