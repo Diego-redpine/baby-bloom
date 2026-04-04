@@ -27,18 +27,22 @@ export async function getValidatedGuest(): Promise<Guest | null> {
   const guest = getGuest();
   if (!guest) return null;
 
-  const { data } = await supabase
-    .from("babyshower_guests")
-    .select("id")
-    .eq("id", guest.id)
-    .limit(1);
+  try {
+    const { data } = await supabase
+      .from("babyshower_guests")
+      .select("id")
+      .eq("id", guest.id)
+      .limit(1);
 
-  if (!data || data.length === 0) {
-    // Guest was deleted from DB — clear stale identity
-    clearGuest();
-    return null;
+    if (!data || data.length === 0) {
+      clearGuest();
+      return null;
+    }
+    return guest;
+  } catch {
+    // Network error — trust localStorage rather than blocking the guest
+    return guest;
   }
-  return guest;
 }
 
 export function saveGuest(guest: Guest) {

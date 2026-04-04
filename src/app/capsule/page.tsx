@@ -315,7 +315,7 @@ export default function CapsulePage() {
           {t("capsule.noProfile")}
         </h1>
         <p className="text-sage/60 text-sm mb-8 text-center max-w-xs">
-          {t("capsule.noProfile")}
+          {t("capsule.noProfileDesc")}
         </p>
         <Link
           href="/photos"
@@ -414,7 +414,7 @@ export default function CapsulePage() {
         >
           <div className="w-6 h-6 rounded-full bg-white" />
         </button>
-        <p className="text-sage/50 text-xs mb-6">Tap to record</p>
+        <p className="text-sage/50 text-xs mb-6">{t("capsule.tapToRecord")}</p>
 
         <button
           onClick={handleBackToPrompt}

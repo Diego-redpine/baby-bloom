@@ -105,11 +105,19 @@ export default function PhotosPage() {
       return;
     }
     const { data: { publicUrl } } = supabase.storage.from("babyshower-photos").getPublicUrl(fileName);
-    const { data: newPhoto } = await supabase.from("babyshower_photos").insert({
+    const { data: newPhoto, error: insertError } = await supabase.from("babyshower_photos").insert({
       photo_url: publicUrl,
       guest_id: guest.id,
       guest_name: guest.name,
     }).select().single();
+    if (insertError || !newPhoto) {
+      alert(t("common.somethingWrong"));
+      // Clean up orphaned file
+      await supabase.storage.from("babyshower-photos").remove([fileName]);
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
     if (newPhoto) {
       setPhotos((prev) => [newPhoto, ...prev]);
     }

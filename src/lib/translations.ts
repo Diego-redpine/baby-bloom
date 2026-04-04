@@ -430,6 +430,22 @@ const translations = {
     en: "Some photos could not be saved. Try saving them individually.",
     es: "Algunas fotos no se pudieron guardar. Intenta guardarlas individualmente.",
   },
+
+  // ── Landing page extras ──
+  "home.inbloom": {
+    en: "in bloom",
+    es: "en flor",
+  },
+  "home.celebrating": {
+    en: "celebrating the arrival of",
+    es: "celebrando la llegada de",
+  },
+
+  // ── Capsule extras ──
+  "capsule.tapToRecord": {
+    en: "Tap to record",
+    es: "Toca para grabar",
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

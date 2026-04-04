@@ -904,11 +904,11 @@ export default function Home() {
                     ))}
                   </h1>
                   <p className="text-inbloom text-4xl text-sage-light mt-2" style={{ fontFamily: "var(--font-calligraphy)" }}>
-                    in bloom
+                    {t("home.inbloom")}
                   </p>
                   <div className="divider-line w-20 h-px bg-sage/30 mx-auto mt-5 mb-4" />
                   <p className="text-cascade text-sage text-base tracking-wide" style={{ fontFamily: "var(--font-serif)" }}>
-                    celebrating the arrival of
+                    {t("home.celebrating")}
                   </p>
                   <p className="text-cascade text-sage text-2xl mt-3" style={{ fontFamily: "var(--font-calligraphy)" }}>
                     {t("home.subtitle")}
