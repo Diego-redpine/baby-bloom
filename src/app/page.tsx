@@ -844,7 +844,7 @@ export default function Home() {
       {/* Sparkle dots */}
       <div ref={sparklesRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 15 }}>
         {Array.from({ length: 16 }, (_, i) => (
-          <div key={i} className="sparkle-dot" style={{ width: 4 + Math.random() * 4, height: 4 + Math.random() * 4 }} />
+          <div key={i} className="sparkle-dot" style={{ width: 4 + (i % 5), height: 4 + (i % 5) }} />
         ))}
       </div>
 
