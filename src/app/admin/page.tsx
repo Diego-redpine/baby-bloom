@@ -106,18 +106,13 @@ export default function AdminPage() {
       if (votesRes.data) setVotes(votesRes.data);
       if (capsulesRes.data) {
         setCapsules(capsulesRes.data);
-        // Resolve signed URLs for capsule playback (parallel)
-        const urlResults = await Promise.all(
-          capsulesRes.data.map(async (c) => {
-            const { data } = await supabase.storage
-              .from("babyshower-capsule")
-              .createSignedUrl(c.storage_path, 3600);
-            return { id: c.id, url: data?.signedUrl };
-          })
-        );
+        // Resolve public URLs for capsule playback
         const urls: Record<string, string> = {};
-        for (const r of urlResults) {
-          if (r.url) urls[r.id] = r.url;
+        for (const c of capsulesRes.data) {
+          const { data } = supabase.storage
+            .from("babyshower-capsule")
+            .getPublicUrl(c.storage_path);
+          if (data?.publicUrl) urls[c.id] = data.publicUrl;
         }
         setCapsuleUrls(urls);
       }
@@ -146,19 +141,22 @@ export default function AdminPage() {
 
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-            <p className="text-2xl font-bold text-sage">{photos.length}</p>
-            <p className="text-sage/60 text-xs">Photos</p>
-          </div>
-          <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-            <p className="text-2xl font-bold text-sage">{uniquePlayers}</p>
-            <p className="text-sage/60 text-xs">Game Players</p>
-          </div>
-          <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-            <p className="text-2xl font-bold text-sage">{capsules.length}</p>
-            <p className="text-sage/60 text-xs">Capsules</p>
-          </div>
+          <button onClick={() => setTab("photos")} className={`rounded-xl p-4 text-center transition-all ${tab === "photos" ? "bg-sage text-cream shadow-md" : "bg-white shadow-sm"}`}>
+            <p className={`text-3xl font-bold ${tab === "photos" ? "text-cream" : "text-sage"}`}>{photos.length}</p>
+            <p className={`text-xs mt-1 ${tab === "photos" ? "text-cream/70" : "text-sage/60"}`}>Photos</p>
+          </button>
+          <button onClick={() => setTab("game")} className={`rounded-xl p-4 text-center transition-all ${tab === "game" ? "bg-sage text-cream shadow-md" : "bg-white shadow-sm"}`}>
+            <p className={`text-3xl font-bold ${tab === "game" ? "text-cream" : "text-sage"}`}>{uniquePlayers}</p>
+            <p className={`text-xs mt-1 ${tab === "game" ? "text-cream/70" : "text-sage/60"}`}>Players</p>
+          </button>
+          <button onClick={() => setTab("capsule")} className={`rounded-xl p-4 text-center transition-all ${tab === "capsule" ? "bg-sage text-cream shadow-md" : "bg-white shadow-sm"}`}>
+            <p className={`text-3xl font-bold ${tab === "capsule" ? "text-cream" : "text-sage"}`}>{capsules.length}</p>
+            <p className={`text-xs mt-1 ${tab === "capsule" ? "text-cream/70" : "text-sage/60"}`}>Capsules</p>
+          </button>
         </div>
+
+        {/* Guest count */}
+        <p className="text-center text-sage/40 text-xs mb-6">{guests.length} guest{guests.length !== 1 ? "s" : ""} registered</p>
 
         {/* Tab bar */}
         <div className="flex gap-2 mb-6 justify-center">
@@ -306,24 +304,26 @@ export default function AdminPage() {
                   const secs = c.duration_seconds ? c.duration_seconds % 60 : 0;
 
                   return (
-                    <div key={c.id} className="bg-white rounded-xl p-5 shadow-sm">
+                    <div key={c.id} className="bg-white rounded-2xl p-5 shadow-md border border-blush/20">
                       {/* Header */}
                       <div className="flex items-center gap-3 mb-4">
                         {cGuest ? (
-                          <GuestAvatar guest={cGuest} size={36} />
+                          <GuestAvatar guest={cGuest} size={44} />
                         ) : (
-                          <div className="w-9 h-9 rounded-full bg-sage/10 flex items-center justify-center text-sage font-bold text-sm">
+                          <div className="w-11 h-11 rounded-full bg-sage/10 flex items-center justify-center text-sage font-bold text-base">
                             {c.guest_name.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <div>
-                          <p className="font-semibold text-sage">{c.guest_name}</p>
-                          <div className="flex items-center gap-2 text-[10px] text-sage/50">
-                            <span>{c.media_type === "video" ? "Video" : "Voice"}</span>
-                            {c.duration_seconds && (
+                        <div className="flex-1">
+                          <p className="font-bold text-sage text-base">{c.guest_name}</p>
+                          <div className="flex items-center gap-2 text-xs text-sage/50">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${c.media_type === "video" ? "bg-sage/10 text-sage" : "bg-blush/30 text-sage/70"}`}>
+                              {c.media_type === "video" ? "Video" : "Voice"}
+                            </span>
+                            {c.duration_seconds != null && (
                               <span>{mins}:{secs.toString().padStart(2, "0")}</span>
                             )}
-                            <span>{new Date(c.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>
+                            <span className="ml-auto">{new Date(c.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>
                           </div>
                         </div>
                       </div>
@@ -334,8 +334,9 @@ export default function AdminPage() {
                           <video
                             src={signedUrl}
                             controls
-                            className="w-full rounded-lg bg-black"
-                            style={{ maxHeight: 300 }}
+                            playsInline
+                            className="w-full rounded-xl bg-black"
+                            style={{ maxHeight: 360 }}
                           />
                         ) : (
                           <audio src={signedUrl} controls className="w-full" />
