@@ -4,11 +4,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { getGuest, type Guest } from "@/lib/guest";
+import { useLanguage } from "@/lib/LanguageContext";
 
 type Screen = "loading" | "no-profile" | "prompt" | "recording" | "preview" | "submitting" | "done";
 type Mode = "video" | "audio";
 
 export default function CapsulePage() {
+  const { t } = useLanguage();
   const [guest, setGuest] = useState<Guest | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [screen, setScreen] = useState<Screen>("loading");
@@ -115,7 +117,7 @@ export default function CapsulePage() {
   async function startRecording(selectedMode: Mode) {
     // Check if browser supports recording at all
     if (typeof MediaRecorder === "undefined") {
-      setPermissionError("Recording is not supported in this browser. Please try using Chrome or Safari.");
+      setPermissionError(t("capsule.notSupported"));
       return;
     }
 
@@ -281,7 +283,7 @@ export default function CapsulePage() {
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-5">
         <Link href="/" className="absolute top-6 left-6 text-sage/50 text-sm">
-          &larr; Back
+          &larr; {t("common.back")}
         </Link>
         <div className="w-14 h-14 rounded-full bg-sage/10 flex items-center justify-center mx-auto mb-4">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2d5a27" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -293,16 +295,16 @@ export default function CapsulePage() {
           className="text-2xl font-bold text-sage mb-2"
           style={{ fontFamily: "var(--font-serif)" }}
         >
-          Profile Needed
+          {t("capsule.noProfile")}
         </h1>
         <p className="text-sage/60 text-sm mb-8 text-center max-w-xs">
-          Please set up your profile first so we know who left this message.
+          {t("capsule.noProfile")}
         </p>
         <Link
           href="/photos"
           className="py-3 px-8 bg-sage text-cream font-semibold rounded-xl"
         >
-          Set Up Profile
+          {t("capsule.goToPhotos")}
         </Link>
       </div>
     );
@@ -313,7 +315,7 @@ export default function CapsulePage() {
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-5">
         <Link href="/" className="absolute top-6 left-6 text-sage/50 text-sm">
-          &larr; Back
+          &larr; {t("common.back")}
         </Link>
         <h1
           className="text-2xl font-bold text-sage mb-4"
@@ -322,9 +324,7 @@ export default function CapsulePage() {
           Time Capsule
         </h1>
         <p className="text-sage/70 text-sm text-center italic max-w-xs mb-8">
-          Leave a message for Adamary y Juan. A wish for the baby, a word for
-          the parents, whatever you want them to hear when they&apos;re ready to
-          open this.
+          {t("capsule.prompt")}
         </p>
 
         {permissionError && (
@@ -342,7 +342,7 @@ export default function CapsulePage() {
               <path d="M23 7l-7 5 7 5V7z" />
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
-            Record Video
+            {t("capsule.recordVideo")}
           </button>
           <button
             onClick={() => startRecording("audio")}
@@ -354,7 +354,7 @@ export default function CapsulePage() {
               <line x1="12" y1="19" x2="12" y2="23" />
               <line x1="8" y1="23" x2="16" y2="23" />
             </svg>
-            Record Voice Message
+            {t("capsule.recordVoice")}
           </button>
         </div>
       </div>
@@ -388,7 +388,7 @@ export default function CapsulePage() {
                 </svg>
               </div>
             </div>
-            <p className="text-sage/60 text-sm">Recording voice message...</p>
+            <p className="text-sage/60 text-sm">{t("capsule.recording")}</p>
           </div>
         )}
 
@@ -400,7 +400,7 @@ export default function CapsulePage() {
           onClick={stopRecording}
           className="w-full max-w-xs py-3 bg-red-500 text-white font-semibold rounded-xl active:scale-[0.98] transition-transform"
         >
-          Stop Recording
+          {t("capsule.stopRecording")}
         </button>
       </div>
     );
@@ -433,7 +433,7 @@ export default function CapsulePage() {
                 </svg>
               </div>
               <div>
-                <p className="text-sage font-semibold text-sm">Voice Message</p>
+                <p className="text-sage font-semibold text-sm">{t("capsule.voiceMessage")}</p>
                 <p className="text-sage/50 text-xs">{formatTime(duration)}</p>
               </div>
             </div>
@@ -446,19 +446,19 @@ export default function CapsulePage() {
             onClick={handleSubmit}
             className="w-full py-3 bg-sage text-cream font-semibold rounded-xl active:scale-[0.98] transition-transform"
           >
-            Submit
+            {t("capsule.submitBtn")}
           </button>
           <button
             onClick={handleRetake}
             className="w-full py-3 bg-blush-light text-sage font-semibold rounded-xl active:scale-[0.98] transition-transform"
           >
-            Retake
+            {t("capsule.retake")}
           </button>
           <button
             onClick={handleBackToPrompt}
             className="w-full py-3 bg-blush text-sage font-semibold rounded-xl active:scale-[0.98] transition-transform"
           >
-            Back
+            {t("capsule.changeModeBtn")}
           </button>
         </div>
       </div>
@@ -470,7 +470,7 @@ export default function CapsulePage() {
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-5">
         <p className="text-sage text-lg font-semibold animate-pulse" style={{ fontFamily: "var(--font-serif)" }}>
-          Saving your message...
+          {t("capsule.uploading")}
         </p>
       </div>
     );
@@ -489,16 +489,16 @@ export default function CapsulePage() {
           className="text-2xl font-bold text-sage mb-2"
           style={{ fontFamily: "var(--font-serif)" }}
         >
-          Your message has been saved
+          {t("capsule.doneTitle")}
         </h1>
         <p className="text-sage/60 text-sm mb-8">
-          Adamary y Juan will open it when the time is right.
+          {t("capsule.doneSubtitle")}
         </p>
         <Link
           href="/"
           className="py-3 px-8 bg-blush text-sage font-semibold rounded-xl"
         >
-          Back to Home
+          {t("capsule.backHome")}
         </Link>
       </div>
     );

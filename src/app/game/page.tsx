@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { getGuest, type Guest } from "@/lib/guest";
 import { GuestOnboarding } from "@/components/GuestOnboarding";
+import { useLanguage } from "@/lib/LanguageContext";
 
 interface Question {
   key: string;
@@ -37,7 +38,16 @@ interface GuestRecord {
   avatar_color: string | null;
 }
 
+function getQuestionLabel(key: string, t: (k: any) => string): string {
+  return t(`game.q.${key}` as any);
+}
+function getOptionLabel(questionKey: string, optionIndex: number, t: (k: any) => string): string {
+  const suffix = ["a", "b", "c", "d"][optionIndex];
+  return t(`game.q.${questionKey}.${suffix}` as any);
+}
+
 export default function GamePage() {
+  const { t, lang } = useLanguage();
   const [guest, setGuest] = useState<Guest | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [step, setStep] = useState(0); // 0 = name entry, 1-8 = questions, 9 = results
@@ -201,7 +211,7 @@ export default function GamePage() {
 
   // --- Results screen ---
   if (step > questions.length) {
-    return <ResultsScreen votes={votes} guests={guests} name={name} />;
+    return <ResultsScreen votes={votes} guests={guests} name={name} t={t} />;
   }
 
   // --- Question flow ---
@@ -214,7 +224,7 @@ export default function GamePage() {
       <div className="w-full max-w-xs mb-8">
         <div className="flex justify-between text-xs text-sage/50 mb-2 uppercase tracking-wider">
           <span className="truncate max-w-[140px]">{name}</span>
-          <span>{step} of {questions.length}</span>
+          <span>{step} {t("game.of")} {questions.length}</span>
         </div>
         <div className="h-2 bg-blush-light rounded-full overflow-hidden">
           <div
@@ -226,7 +236,7 @@ export default function GamePage() {
 
       {/* Question card */}
       <div className="w-full max-w-xs bg-white rounded-2xl shadow-lg p-5 text-center">
-        <h2 className="text-lg font-bold text-sage mb-4" style={{ fontFamily: "var(--font-serif)" }}>{q.label}</h2>
+        <h2 className="text-lg font-bold text-sage mb-4" style={{ fontFamily: "var(--font-serif)" }}>{getQuestionLabel(q.key, t)}</h2>
 
         {q.type === "thisorthat" && q.options && (
           <div className="flex gap-3">
@@ -246,7 +256,7 @@ export default function GamePage() {
                       : "bg-cream text-sage border-2 border-blush"
                   }`}
                 >
-                  {option}
+                  {getOptionLabel(q.key, i, t)}
                 </button>
               );
             })}
@@ -255,7 +265,7 @@ export default function GamePage() {
 
         {q.type === "multiplechoice" && q.options && (
           <div className="flex flex-col gap-3">
-            {q.options.map((option) => {
+            {q.options.map((option, i) => {
               const isSelected = flashValue === option;
               return (
                 <button
@@ -268,7 +278,7 @@ export default function GamePage() {
                       : "border-blush bg-cream text-sage"
                   }`}
                 >
-                  {option}
+                  {getOptionLabel(q.key, i, t)}
                 </button>
               );
             })}
@@ -297,7 +307,7 @@ export default function GamePage() {
               onClick={() => setStep(step - 1)}
               className="flex-1 py-3 bg-blush-light text-sage font-semibold rounded-xl"
             >
-              Back
+              {t("game.back")}
             </button>
           )}
           {step < questions.length ? (
@@ -306,7 +316,7 @@ export default function GamePage() {
               disabled={!currentAnswer.trim()}
               className="flex-1 py-3 bg-sage text-cream font-semibold rounded-xl disabled:opacity-40 transition-opacity"
             >
-              Next
+              {t("game.next")}
             </button>
           ) : (
             <button
@@ -314,7 +324,7 @@ export default function GamePage() {
               disabled={!currentAnswer.trim() || submitting}
               className="flex-1 py-3 bg-sage text-cream font-semibold rounded-xl disabled:opacity-40 transition-opacity"
             >
-              {submitting ? "Submitting..." : "Submit"}
+              {submitting ? t("game.submitting") : t("game.submit")}
             </button>
           )}
         </div>
@@ -327,7 +337,7 @@ export default function GamePage() {
             onClick={() => setStep(step - 1)}
             className="flex-1 py-3 bg-blush-light text-sage font-semibold rounded-xl"
           >
-            Back
+            {t("game.back")}
           </button>
         </div>
       )}
@@ -341,10 +351,12 @@ function ResultsScreen({
   votes,
   guests,
   name,
+  t,
 }: {
   votes: Vote[];
   guests: GuestRecord[];
   name: string;
+  t: (key: any) => string;
 }) {
   // Build a map of guest names to their initial + color
   const guestMap = new Map<string, { initial: string; color: string }>();
@@ -366,13 +378,13 @@ function ResultsScreen({
   return (
     <div className="min-h-screen bg-cream px-5 py-10">
       <div className="max-w-md mx-auto">
-        <Link href="/" className="text-sage/50 text-sm">&larr; Back</Link>
+        <Link href="/" className="text-sage/50 text-sm">&larr; {t("common.back")}</Link>
 
         <div className="text-center mt-4 mb-8">
           <h1 className="text-2xl font-bold text-sage" style={{ fontFamily: "var(--font-serif)" }}>
-            Thanks, {name}!
+            {t("game.results")}
           </h1>
-          <p className="text-sage/60 text-sm mt-2">Here&apos;s what everyone thinks.</p>
+          <p className="text-sage/60 text-sm mt-2">{t("game.responses")}</p>
         </div>
 
         <div className="space-y-6">
@@ -381,16 +393,16 @@ function ResultsScreen({
             return (
               <div key={q.key} className="bg-white rounded-2xl shadow-lg p-5">
                 <h3 className="text-lg font-bold text-sage mb-4" style={{ fontFamily: "var(--font-serif)" }}>
-                  {q.label}
+                  {getQuestionLabel(q.key, t)}
                 </h3>
                 {q.type === "thisorthat" && q.options && (
-                  <ThisOrThatResult votes={qVotes} options={q.options} />
+                  <ThisOrThatResult votes={qVotes} options={q.options} questionKey={q.key} t={t} />
                 )}
                 {q.type === "multiplechoice" && q.options && (
-                  <MultipleChoiceResult votes={qVotes} options={q.options} />
+                  <MultipleChoiceResult votes={qVotes} options={q.options} questionKey={q.key} t={t} />
                 )}
                 {q.type === "freetext" && (
-                  <FreetextResult votes={qVotes} guestMap={guestMap} />
+                  <FreetextResult votes={qVotes} guestMap={guestMap} t={t} />
                 )}
               </div>
             );
@@ -402,7 +414,7 @@ function ResultsScreen({
             href="/"
             className="inline-block py-3 px-8 bg-blush text-sage font-semibold rounded-xl"
           >
-            Back to Home
+            {t("game.backHome")}
           </Link>
         </div>
       </div>
@@ -412,7 +424,7 @@ function ResultsScreen({
 
 // --- Result Sub-Components ---
 
-function ThisOrThatResult({ votes, options }: { votes: Vote[]; options: string[] }) {
+function ThisOrThatResult({ votes, options, questionKey, t }: { votes: Vote[]; options: string[]; questionKey: string; t: (key: any) => string }) {
   const total = votes.length;
   const countA = votes.filter((v) => v.answer === options[0]).length;
   const countB = total - countA;
@@ -422,8 +434,8 @@ function ThisOrThatResult({ votes, options }: { votes: Vote[]; options: string[]
   return (
     <div>
       <div className="flex justify-between text-xs text-sage/50 uppercase tracking-wider mb-2">
-        <span>{options[0]}</span>
-        <span>{options[1]}</span>
+        <span>{getOptionLabel(questionKey, 0, t)}</span>
+        <span>{getOptionLabel(questionKey, 1, t)}</span>
       </div>
       <div className="h-8 bg-blush-light rounded-full overflow-hidden flex">
         <div
@@ -440,14 +452,14 @@ function ThisOrThatResult({ votes, options }: { votes: Vote[]; options: string[]
         </div>
       </div>
       <div className="flex justify-between text-xs text-sage/50 mt-1">
-        <span>{countA} {countA === 1 ? "vote" : "votes"}</span>
-        <span>{countB} {countB === 1 ? "vote" : "votes"}</span>
+        <span>{countA} {t("game.votes")}</span>
+        <span>{countB} {t("game.votes")}</span>
       </div>
     </div>
   );
 }
 
-function MultipleChoiceResult({ votes, options }: { votes: Vote[]; options: string[] }) {
+function MultipleChoiceResult({ votes, options, questionKey, t }: { votes: Vote[]; options: string[]; questionKey: string; t: (key: any) => string }) {
   const total = votes.length;
   const counts = options.map((opt) => votes.filter((v) => v.answer === opt).length);
   const maxCount = Math.max(...counts, 1);
@@ -461,7 +473,7 @@ function MultipleChoiceResult({ votes, options }: { votes: Vote[]; options: stri
         return (
           <div key={opt}>
             <div className="flex justify-between text-sm text-sage mb-1">
-              <span>{opt}</span>
+              <span>{getOptionLabel(questionKey, i, t)}</span>
               <span className="text-sage/50 text-xs">{count} ({pct}%)</span>
             </div>
             <div className="h-3 bg-blush-light rounded-full overflow-hidden">
@@ -480,12 +492,14 @@ function MultipleChoiceResult({ votes, options }: { votes: Vote[]; options: stri
 function FreetextResult({
   votes,
   guestMap,
+  t,
 }: {
   votes: Vote[];
   guestMap: Map<string, { initial: string; color: string }>;
+  t: (key: any) => string;
 }) {
   if (votes.length === 0) {
-    return <p className="text-sage/40 text-sm">No answers yet.</p>;
+    return <p className="text-sage/40 text-sm">{t("game.noAnswers")}</p>;
   }
 
   return (

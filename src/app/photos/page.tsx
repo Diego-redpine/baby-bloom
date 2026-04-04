@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { getGuest, clearGuest, type Guest } from "@/lib/guest";
 import { GuestAvatar } from "@/components/GuestAvatar";
 import { GuestOnboarding } from "@/components/GuestOnboarding";
+import { useLanguage } from "@/lib/LanguageContext";
 
 interface Photo {
   id: string;
@@ -34,6 +35,7 @@ export default function PhotosPage() {
   const [viewPhoto, setViewPhoto] = useState<string | null>(null);
   const [savingAll, setSavingAll] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { t } = useLanguage();
 
   async function downloadPhoto(url: string, name: string) {
     try {
@@ -150,13 +152,13 @@ export default function PhotosPage() {
       {/* Header — sticky so page context is always visible */}
       <div className="sticky top-0 z-20 bg-cream pt-4 pb-3 text-center">
         <div className="flex items-center justify-between px-1">
-          <Link href="/" className="text-sage/50 text-sm">&larr; Back</Link>
-          <h1 className="text-lg font-bold text-sage" style={{ fontFamily: "var(--font-serif)" }}>Share your memories</h1>
+          <Link href="/" className="text-sage/50 text-sm">&larr; {t("photos.back")}</Link>
+          <h1 className="text-lg font-bold text-sage" style={{ fontFamily: "var(--font-serif)" }}>{t("photos.title")}</h1>
           <button
             onClick={() => { clearGuest(); setGuest(null); }}
             className="text-sage/40 text-[10px]"
           >
-            Not you?
+            {t("photos.notYou")}
           </button>
         </div>
         {displayPhotos.length > 0 && (
@@ -166,7 +168,7 @@ export default function PhotosPage() {
             className="mt-2 py-2 px-5 bg-sage text-cream text-sm font-semibold rounded-xl disabled:opacity-40 transition-opacity"
             style={{ fontFamily: "var(--font-serif)" }}
           >
-            {savingAll ? "Saving..." : "Save All Photos"}
+            {savingAll ? t("photos.saving") : t("photos.saveAll")}
           </button>
         )}
       </div>
@@ -196,7 +198,7 @@ export default function PhotosPage() {
               <div className={`w-10 h-10 rounded-full bg-sage/10 flex items-center justify-center text-sage text-[10px] font-bold border-2 ${!filterGuest ? "border-sage" : "border-transparent"}`}>
                 All
               </div>
-              <span className="text-[9px] text-sage/60 w-14 text-center">Everyone</span>
+              <span className="text-[9px] text-sage/60 w-14 text-center">{t("photos.everyone")}</span>
             </button>
           </div>
         </div>
@@ -206,7 +208,7 @@ export default function PhotosPage() {
       {displayPhotos.length === 0 ? (
         <div className="text-center text-sage/40 mt-16">
           <p className="text-sage/20 text-5xl mb-3" style={{ fontFamily: "var(--font-calligraphy)" }}>~</p>
-          <p>No photos yet &mdash; be the first!</p>
+          <p>{t("photos.noPhotos")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
@@ -240,7 +242,7 @@ export default function PhotosPage() {
                     }}
                     className="text-[10px] text-sage/40 hover:text-sage/70 font-semibold transition-colors min-h-[44px] min-w-[44px] flex items-center justify-end"
                   >
-                    Save
+                    {t("photos.save")}
                   </button>
                 </div>
               </div>
@@ -264,9 +266,9 @@ export default function PhotosPage() {
         <label className="cursor-pointer">
           <div className="bg-sage text-cream font-semibold py-3 px-6 rounded-full shadow-lg hover:bg-sage-light transition-all flex items-center gap-2 text-sm">
             {uploading ? (
-              <span className="animate-pulse">Uploading...</span>
+              <span className="animate-pulse">{t("onboarding.uploading")}</span>
             ) : (
-              "Take a Photo"
+              t("photos.takePhoto")
             )}
           </div>
           <input

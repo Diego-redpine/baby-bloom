@@ -5,8 +5,10 @@ import { supabase } from "@/lib/supabase";
 import { saveGuest, AVATAR_COLORS, type Guest } from "@/lib/guest";
 import { GuestAvatar } from "./GuestAvatar";
 import { Facehash } from "facehash";
+import { useLanguage } from "@/lib/LanguageContext";
 
 export function GuestOnboarding({ onComplete }: { onComplete: (guest: Guest) => void }) {
+  const { t } = useLanguage();
   const [step, setStep] = useState<"name" | "avatar">("name");
   const [name, setName] = useState("");
   const [avatarType, setAvatarType] = useState<"default" | "custom">("default");
@@ -68,13 +70,13 @@ export function GuestOnboarding({ onComplete }: { onComplete: (guest: Guest) => 
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6">
         <div className="text-4xl mb-4" style={{ fontFamily: "var(--font-calligraphy)", color: "#d4a0a0" }}>*</div>
-        <h1 className="text-2xl font-bold text-sage mb-2" style={{ fontFamily: "var(--font-serif)" }}>Welcome</h1>
+        <h1 className="text-2xl font-bold text-sage mb-2" style={{ fontFamily: "var(--font-serif)" }}>{t("onboarding.welcome")}</h1>
         <p className="text-sage/60 text-sm mb-8 text-center">
-          Enter your name to get started
+          {t("onboarding.enterName")}
         </p>
         <input
           type="text"
-          placeholder="Your name"
+          placeholder={t("onboarding.namePlaceholder")}
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="w-full max-w-xs py-3 px-4 rounded-xl border-2 border-blush bg-white text-sage text-center text-lg focus:outline-none focus:border-sage transition-colors"
@@ -85,7 +87,7 @@ export function GuestOnboarding({ onComplete }: { onComplete: (guest: Guest) => 
           disabled={!name.trim()}
           className="mt-4 w-full max-w-xs py-3 bg-sage text-cream font-semibold rounded-xl disabled:opacity-40 transition-opacity"
         >
-          Next
+          {t("onboarding.next")}
         </button>
       </div>
     );
@@ -93,9 +95,9 @@ export function GuestOnboarding({ onComplete }: { onComplete: (guest: Guest) => 
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6">
-      <h1 className="text-2xl font-bold text-sage mb-2" style={{ fontFamily: "var(--font-serif)" }}>Choose your look</h1>
+      <h1 className="text-2xl font-bold text-sage mb-2" style={{ fontFamily: "var(--font-serif)" }}>{t("onboarding.chooseLook")}</h1>
       <p className="text-sage/60 text-sm mb-6 text-center">
-        Pick a color or upload a photo
+        {t("onboarding.pickColor")}
       </p>
 
       {/* Preview */}
@@ -107,7 +109,7 @@ export function GuestOnboarding({ onComplete }: { onComplete: (guest: Guest) => 
       </div>
 
       {/* Color options — 8 grid */}
-      <p className="text-sage/50 text-xs mb-3 uppercase tracking-wider">Default avatars</p>
+      <p className="text-sage/50 text-xs mb-3 uppercase tracking-wider">{t("onboarding.defaultAvatars")}</p>
       <div className="grid grid-cols-4 gap-3 mb-6">
         {AVATAR_COLORS.map((c) => (
           <button
@@ -125,14 +127,14 @@ export function GuestOnboarding({ onComplete }: { onComplete: (guest: Guest) => 
       </div>
 
       {/* Upload option */}
-      <p className="text-sage/50 text-xs mb-3 uppercase tracking-wider">Or use your own</p>
+      <p className="text-sage/50 text-xs mb-3 uppercase tracking-wider">{t("onboarding.orUseOwn")}</p>
       <label className="cursor-pointer mb-6">
         <div className={`py-2.5 px-6 rounded-xl text-center text-sm font-semibold transition-all ${
           avatarType === "custom" && customUrl
             ? "bg-sage text-cream"
             : "bg-blush text-sage border border-blush-dark/20"
         }`}>
-          {uploading ? "Uploading..." : customUrl ? "Photo uploaded" : "Upload Photo"}
+          {uploading ? t("onboarding.uploading") : customUrl ? t("onboarding.photoUploaded") : t("onboarding.uploadPhoto")}
         </div>
         <input
           ref={fileRef}
@@ -149,7 +151,7 @@ export function GuestOnboarding({ onComplete }: { onComplete: (guest: Guest) => 
         disabled={finishing}
         className="w-full max-w-xs py-3 bg-sage text-cream font-semibold rounded-xl transition-opacity disabled:opacity-40"
       >
-        {finishing ? "Setting up..." : "Let\u0027s Go!"}
+        {finishing ? t("onboarding.settingUp") : t("onboarding.letsGo")}
       </button>
     </div>
   );

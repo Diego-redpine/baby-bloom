@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/lib/LanguageContext";
+import type { TranslationKey } from "@/lib/translations";
 
 interface Vote {
   id: string;
@@ -26,6 +28,15 @@ export default function RevealPage() {
   const [votes, setVotes] = useState<Vote[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  const { t } = useLanguage();
+
+  function tq(key: string): string {
+    return t(`game.q.${key}` as TranslationKey);
+  }
+  function tOpt(questionKey: string, index: number): string {
+    const suffix = ["a", "b", "c", "d"][index];
+    return t(`game.q.${questionKey}.${suffix}` as TranslationKey);
+  }
 
   useEffect(() => {
     async function load() {
@@ -61,9 +72,9 @@ export default function RevealPage() {
     <div className="min-h-screen bg-sage flex flex-col items-center justify-center px-6 py-12">
       {/* Title */}
       <div className="text-center mb-8">
-        <p className="text-cream/60 text-sm tracking-widest uppercase">Baby in Bloom</p>
+        <p className="text-cream/60 text-sm tracking-widest uppercase">{t("reveal.subtitle")}</p>
         <h1 className="text-3xl font-bold text-cream mt-1" style={{ fontFamily: "var(--font-serif)" }}>
-          What&apos;s She Like?
+          {t("reveal.title")}
         </h1>
       </div>
 
@@ -89,16 +100,16 @@ export default function RevealPage() {
       {/* Question card */}
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 text-center">
         <p className="text-xs text-sage/40 uppercase tracking-wider mb-2">
-          {q.type === "thisorthat" ? "This or That" : q.type === "multiplechoice" ? "Multiple Choice" : "Free Text"}
+          {q.type === "thisorthat" ? t("reveal.thisOrThat") : q.type === "multiplechoice" ? t("reveal.multipleChoice") : t("reveal.freeText")}
         </p>
-        <h2 className="text-xl font-bold text-sage mb-6" style={{ fontFamily: "var(--font-serif)" }}>{q.label}</h2>
+        <h2 className="text-xl font-bold text-sage mb-6" style={{ fontFamily: "var(--font-serif)" }}>{tq(q.key)}</h2>
 
         {!revealed ? (
           <button
             onClick={() => setRevealed(true)}
             className="py-3 px-8 bg-blush text-sage font-bold rounded-xl text-lg hover:bg-blush-dark transition-colors"
           >
-            Reveal Answers!
+            {t("reveal.reveal")}
           </button>
         ) : (
           <div className="space-y-3 max-h-80 overflow-y-auto">
@@ -111,7 +122,7 @@ export default function RevealPage() {
                   return (
                     <div key={opt}>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="font-semibold text-sage">{opt}</span>
+                        <span className="font-semibold text-sage">{tOpt(q.key, i)}</span>
                         <span className="text-sage/50">{count} ({pct}%)</span>
                       </div>
                       <div className="h-4 bg-blush-light rounded-full overflow-hidden">
@@ -136,7 +147,7 @@ export default function RevealPage() {
                   return (
                     <div key={opt}>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="font-semibold text-sage">{opt}</span>
+                        <span className="font-semibold text-sage">{tOpt(q.key, i)}</span>
                         <span className="text-sage/50">{count} ({pct}%)</span>
                       </div>
                       <div className="h-4 bg-blush-light rounded-full overflow-hidden">
@@ -155,7 +166,7 @@ export default function RevealPage() {
             {q.type === "freetext" && (
               <div className="space-y-2 text-left">
                 {qVotes.length === 0 ? (
-                  <p className="text-sage/40 text-center">No answers yet</p>
+                  <p className="text-sage/40 text-center">{t("reveal.noAnswers")}</p>
                 ) : (
                   qVotes.map((v) => (
                     <div
@@ -185,7 +196,7 @@ export default function RevealPage() {
             onClick={() => { setCurrentQ(currentQ - 1); setRevealed(false); }}
             className="py-3 px-6 bg-cream/20 text-cream font-semibold rounded-xl"
           >
-            &larr; Previous
+            &larr; {t("reveal.previous")}
           </button>
         )}
         {currentQ < questions.length - 1 && (
@@ -193,13 +204,13 @@ export default function RevealPage() {
             onClick={() => { setCurrentQ(currentQ + 1); setRevealed(false); }}
             className="py-3 px-6 bg-cream text-sage font-semibold rounded-xl"
           >
-            Next &rarr;
+            {t("reveal.next")} &rarr;
           </button>
         )}
       </div>
 
       <p className="mt-8 text-cream/40 text-xs">
-        {uniquePlayers} guest{uniquePlayers !== 1 ? "s" : ""} have played
+        {uniquePlayers} {uniquePlayers !== 1 ? t("reveal.guestsPlayed") : t("reveal.guestPlayed")}
       </p>
     </div>
   );

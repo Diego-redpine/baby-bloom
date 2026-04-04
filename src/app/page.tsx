@@ -3,6 +3,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import gsap from "gsap";
+import { useLanguage } from "@/lib/LanguageContext";
 
 /* SVG filter definitions for watercolor effect */
 function WatercolorFilters() {
@@ -596,6 +597,7 @@ function FloralSideRight() {
 }
 
 export default function Home() {
+  const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const petalsRef = useRef<HTMLDivElement>(null);
   const sparklesRef = useRef<HTMLDivElement>(null);
@@ -883,21 +885,21 @@ export default function Home() {
                 celebrating the arrival of
               </p>
               <p className="text-cascade text-sage text-2xl mt-3" style={{ fontFamily: "var(--font-calligraphy)" }}>
-                Adamary y Juan&apos;s baby
+                {t("home.subtitle")}
               </p>
               <p className="text-cascade text-sage/60 text-sm mt-3" style={{ fontFamily: "var(--font-serif)" }}>
-                Saturday, April 4th at 6pm
+                {t("home.date")}
               </p>
             </div>
             <div className="mt-8 space-y-3">
               <Link href="/photos" className="btn-animate block w-full py-3.5 bg-white/60 backdrop-blur-sm rounded-xl text-center text-sage font-semibold text-base border border-blush-dark/20 hover:bg-white/80 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                Share Memories
+                {t("home.cta.photos")}
               </Link>
               <Link href="/game" className="btn-animate block w-full py-3.5 bg-sage/90 rounded-xl text-center text-cream font-semibold text-base hover:bg-sage hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                What&apos;s She Like?
+                {t("home.cta.game")}
               </Link>
               <Link href="/capsule" className="btn-animate block w-full py-3.5 bg-blush/80 backdrop-blur-sm rounded-xl text-center text-sage font-semibold text-base border border-blush-dark/20 hover:bg-blush hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                Time Capsule
+                {t("home.cta.capsule")}
               </Link>
             </div>
           </div>
