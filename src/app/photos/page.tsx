@@ -135,7 +135,7 @@ export default function PhotosPage() {
       for (let i = 0; i < displayPhotos.length; i++) {
         const photo = displayPhotos[i];
         const ext = photo.photo_url.split(".").pop()?.split("?")[0] || "jpg";
-        await downloadPhoto(photo.photo_url, `baby-bloom-${i + 1}.${ext}`);
+        await downloadPhoto(photo.photo_url, `photo_${i + 1}.${ext}`);
         if (i < displayPhotos.length - 1) {
           await new Promise((r) => setTimeout(r, 500));
         }
@@ -238,7 +238,7 @@ export default function PhotosPage() {
                   <button
                     onClick={() => {
                       const ext = photo.photo_url.split(".").pop()?.split("?")[0] || "jpg";
-                      downloadPhoto(photo.photo_url, `baby-bloom-${photo.id.slice(0, 8)}.${ext}`);
+                      downloadPhoto(photo.photo_url, `photo.${ext}`);
                     }}
                     className="text-[10px] text-sage/40 hover:text-sage/70 font-semibold transition-colors min-h-[44px] min-w-[44px] flex items-center justify-end"
                   >
