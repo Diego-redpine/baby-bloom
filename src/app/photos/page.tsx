@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { getGuest, clearGuest, type Guest } from "@/lib/guest";
+import { getValidatedGuest, clearGuest, type Guest } from "@/lib/guest";
 import { GuestAvatar } from "@/components/GuestAvatar";
 import { GuestOnboarding } from "@/components/GuestOnboarding";
 import { useLanguage } from "@/lib/LanguageContext";
@@ -52,10 +52,14 @@ export default function PhotosPage() {
     }
   }
 
-  // Check for existing guest identity
+  // Check for existing guest identity (validate against DB)
   useEffect(() => {
-    setGuest(getGuest());
-    setLoaded(true);
+    async function init() {
+      const validated = await getValidatedGuest();
+      setGuest(validated);
+      setLoaded(true);
+    }
+    init();
   }, []);
 
   // Load photos and guests

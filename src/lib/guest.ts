@@ -1,4 +1,6 @@
 // Cookie-based guest identity — no auth required
+import { supabase } from "./supabase";
+
 const GUEST_KEY = "babybloom_guest";
 
 export interface Guest {
@@ -17,6 +19,26 @@ export function getGuest(): Guest | null {
   } catch {
     return null;
   }
+}
+
+// Validate that the stored guest still exists in Supabase
+// Returns the guest if valid, null if stale (and clears localStorage)
+export async function getValidatedGuest(): Promise<Guest | null> {
+  const guest = getGuest();
+  if (!guest) return null;
+
+  const { data } = await supabase
+    .from("babyshower_guests")
+    .select("id")
+    .eq("id", guest.id)
+    .limit(1);
+
+  if (!data || data.length === 0) {
+    // Guest was deleted from DB — clear stale identity
+    clearGuest();
+    return null;
+  }
+  return guest;
 }
 
 export function saveGuest(guest: Guest) {

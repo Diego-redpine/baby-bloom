@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { getGuest, type Guest } from "@/lib/guest";
+import { getValidatedGuest, type Guest } from "@/lib/guest";
 import { useLanguage } from "@/lib/LanguageContext";
 
 type Screen = "loading" | "no-profile" | "prompt" | "ready" | "recording" | "preview" | "submitting" | "done";
@@ -62,7 +62,7 @@ export default function CapsulePage() {
   // Check identity on mount
   useEffect(() => {
     async function init() {
-      const existing = getGuest();
+      const existing = await getValidatedGuest();
       if (!existing) {
         setScreen("no-profile");
         setLoaded(true);

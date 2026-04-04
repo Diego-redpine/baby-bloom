@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { getGuest, type Guest } from "@/lib/guest";
+import { getValidatedGuest, type Guest } from "@/lib/guest";
 import { GuestOnboarding } from "@/components/GuestOnboarding";
 import { useLanguage } from "@/lib/LanguageContext";
 
@@ -62,7 +62,7 @@ export default function GamePage() {
 
   useEffect(() => {
     async function init() {
-      const existing = getGuest();
+      const existing = await getValidatedGuest();
       if (existing) {
         setGuest(existing);
         setName(existing.name);
