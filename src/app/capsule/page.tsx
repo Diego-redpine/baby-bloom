@@ -102,17 +102,12 @@ export default function CapsulePage() {
     }
   }, [screen, mode]);
 
-  // Create preview URL when blob is ready
+  // Revoke preview URL on unmount
   useEffect(() => {
-    if (screen === "preview" && recordedBlob) {
-      const url = URL.createObjectURL(recordedBlob);
-      setPreviewUrl(url);
-      return () => {
-        URL.revokeObjectURL(url);
-        setPreviewUrl(null);
-      };
-    }
-  }, [screen, recordedBlob]);
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   function formatTime(seconds: number) {
     const m = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -184,7 +179,11 @@ export default function CapsulePage() {
         const blob = new Blob(chunksRef.current, {
           type: blobType,
         });
+        // Revoke old preview URL if any
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        const url = URL.createObjectURL(blob);
         setRecordedBlob(blob);
+        setPreviewUrl(url);
         setScreen("preview");
       };
 
@@ -226,6 +225,8 @@ export default function CapsulePage() {
   }
 
   function handleRetake() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
     setRecordedBlob(null);
     setDuration(0);
     startRecording(mode);
@@ -233,6 +234,8 @@ export default function CapsulePage() {
 
   function handleBackToPrompt() {
     stopStream();
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
     setRecordedBlob(null);
     setDuration(0);
     setPermissionError(null);

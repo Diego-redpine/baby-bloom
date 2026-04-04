@@ -24,26 +24,34 @@ const LanguageContext = createContext<LanguageContextValue>({
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
   const [showPopup, setShowPopup] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const [hasChosen, setHasChosen] = useState(false);
 
+  // Read stored language on mount — no loading gate, just update lang
   useEffect(() => {
     const stored = localStorage.getItem(LANG_KEY) as Lang | null;
     if (stored === "en" || stored === "es") {
       setLangState(stored);
-      setLoaded(true);
-    } else {
-      setLoaded(true);
-      // Show popup after 10 seconds if no language chosen
-      const timer = setTimeout(() => {
-        setShowPopup(true);
-      }, 10000);
-      return () => clearTimeout(timer);
+      setHasChosen(true);
     }
   }, []);
+
+  // Show popup after 10 seconds, but ONLY on the landing page
+  useEffect(() => {
+    if (hasChosen) return;
+    const path = window.location.pathname;
+    const isLandingPage = path === "/" || path === "/baby-bloom" || path === "/baby-bloom/";
+    if (!isLandingPage) return;
+
+    const timer = setTimeout(() => {
+      setShowPopup(true);
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [hasChosen]);
 
   const setLang = useCallback((newLang: Lang) => {
     setLangState(newLang);
     localStorage.setItem(LANG_KEY, newLang);
+    setHasChosen(true);
   }, []);
 
   const dismissPopup = useCallback((chosenLang: Lang) => {
@@ -54,8 +62,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const t = useCallback((key: TranslationKey) => {
     return translate(key, lang);
   }, [lang]);
-
-  if (!loaded) return null;
 
   return (
     <LanguageContext.Provider value={{ lang, setLang, t, showPopup, dismissPopup }}>
