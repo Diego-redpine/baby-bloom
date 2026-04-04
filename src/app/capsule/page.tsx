@@ -18,6 +18,7 @@ export default function CapsulePage() {
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [duration, setDuration] = useState(0);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -101,12 +102,17 @@ export default function CapsulePage() {
     }
   }, [screen, mode]);
 
-  // Attach recorded blob to playback element
+  // Create preview URL when blob is ready
   useEffect(() => {
-    if (screen === "preview" && mode === "video" && videoPlaybackRef.current && recordedBlob) {
-      videoPlaybackRef.current.src = createTrackedBlobUrl(recordedBlob);
+    if (screen === "preview" && recordedBlob) {
+      const url = URL.createObjectURL(recordedBlob);
+      setPreviewUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+        setPreviewUrl(null);
+      };
     }
-  }, [screen, mode, recordedBlob, createTrackedBlobUrl]);
+  }, [screen, recordedBlob]);
 
   function formatTime(seconds: number) {
     const m = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -407,8 +413,7 @@ export default function CapsulePage() {
   }
 
   // Preview screen
-  if (screen === "preview" && recordedBlob) {
-    const blobUrl = createTrackedBlobUrl(recordedBlob);
+  if (screen === "preview" && recordedBlob && previewUrl) {
     return (
       <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-5">
         {mode === "video" ? (
@@ -418,7 +423,7 @@ export default function CapsulePage() {
               controls
               playsInline
               className="w-full aspect-[3/4] object-cover"
-              src={blobUrl}
+              src={previewUrl}
             />
           </div>
         ) : (
@@ -437,7 +442,7 @@ export default function CapsulePage() {
                 <p className="text-sage/50 text-xs">{formatTime(duration)}</p>
               </div>
             </div>
-            <audio controls className="w-full" src={blobUrl} />
+            <audio controls className="w-full" src={previewUrl} />
           </div>
         )}
 
