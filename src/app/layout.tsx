@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Pinyon_Script } from "next/font/google";
 import { LanguageProvider } from "@/lib/LanguageContext";
-import { LanguagePopup } from "@/components/LanguagePopup";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -45,7 +44,6 @@ export default function RootLayout({
       <body className="min-h-screen bg-cream antialiased">
         <LanguageProvider>
           {children}
-          <LanguagePopup />
         </LanguageProvider>
       </body>
     </html>

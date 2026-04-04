@@ -136,7 +136,6 @@ export default function AdminPage() {
           <h1 className="text-2xl font-bold text-sage mt-2" style={{ fontFamily: "var(--font-serif)" }}>
             Admin Dashboard
           </h1>
-          <p className="text-sage/60 text-sm mt-1">Baby in Bloom</p>
         </div>
 
         {/* Stats row */}

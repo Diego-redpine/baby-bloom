@@ -597,10 +597,12 @@ function FloralSideRight() {
 }
 
 export default function Home() {
-  const { t } = useLanguage();
+  const { t, hasChosen, setLang } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const petalsRef = useRef<HTMLDivElement>(null);
   const sparklesRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const langGateRef = useRef<HTMLDivElement>(null);
 
   /* ── GSAP falling petal loop ── */
   const startPetalLoop = useCallback(() => {
@@ -871,37 +873,99 @@ export default function Home() {
       <div className="content-card relative z-10 flex flex-col items-center px-8 py-12">
         <div className="relative w-full max-w-xs">
           <div className="bg-blush/40 rounded-t-[120px] rounded-b-lg px-8 pt-14 pb-10 border border-blush-dark/20">
-            <div className="text-center">
-              <h1 className="text-5xl font-bold text-sage tracking-[0.25em]" style={{ fontFamily: "var(--font-serif)" }}>
-                {"BABY".split("").map((letter, i) => (
-                  <span key={i} className="baby-letter inline-block">{letter}</span>
-                ))}
-              </h1>
-              <p className="text-inbloom text-4xl text-sage-light mt-2" style={{ fontFamily: "var(--font-calligraphy)" }}>
-                in bloom
-              </p>
-              <div className="divider-line w-20 h-px bg-sage/30 mx-auto mt-5 mb-4" />
-              <p className="text-cascade text-sage text-base tracking-wide" style={{ fontFamily: "var(--font-serif)" }}>
-                celebrating the arrival of
-              </p>
-              <p className="text-cascade text-sage text-2xl mt-3" style={{ fontFamily: "var(--font-calligraphy)" }}>
-                {t("home.subtitle")}
-              </p>
-              <p className="text-cascade text-sage/60 text-sm mt-3" style={{ fontFamily: "var(--font-serif)" }}>
-                {t("home.date")}
-              </p>
-            </div>
-            <div className="mt-8 space-y-3">
-              <Link href="/photos" className="btn-animate block w-full py-3.5 bg-white/60 backdrop-blur-sm rounded-xl text-center text-sage font-semibold text-base border border-blush-dark/20 hover:bg-white/80 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                {t("home.cta.photos")}
-              </Link>
-              <Link href="/game" className="btn-animate block w-full py-3.5 bg-sage/90 rounded-xl text-center text-cream font-semibold text-base hover:bg-sage hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                {t("home.cta.game")}
-              </Link>
-              <Link href="/capsule" className="btn-animate block w-full py-3.5 bg-blush/80 backdrop-blur-sm rounded-xl text-center text-sage font-semibold text-base border border-blush-dark/20 hover:bg-blush hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm" style={{ fontFamily: "var(--font-serif)" }}>
-                {t("home.cta.capsule")}
-              </Link>
-            </div>
+            {/* Language gate — shown first if no language chosen */}
+            {!hasChosen && (
+              <div ref={langGateRef} className="flex flex-col items-center justify-center py-12">
+                <p className="text-sage/50 text-xs uppercase tracking-wider mb-2" style={{ fontFamily: "var(--font-serif)" }}>Choose your language</p>
+                <p className="text-sage/50 text-xs uppercase tracking-wider mb-8" style={{ fontFamily: "var(--font-serif)" }}>Elige tu idioma</p>
+                <div className="w-full space-y-3">
+                  <button
+                    onClick={() => {
+                      if (langGateRef.current && contentRef.current) {
+                        gsap.to(langGateRef.current, {
+                          opacity: 0, scale: 0.95, duration: 0.4, ease: "power2.in",
+                          onComplete: () => {
+                            setLang("en");
+                            // Animate content in after next render
+                            setTimeout(() => {
+                              if (contentRef.current) {
+                                gsap.fromTo(contentRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
+                              }
+                            }, 50);
+                          }
+                        });
+                      } else {
+                        setLang("en");
+                      }
+                    }}
+                    className="w-full py-3.5 bg-sage/90 rounded-xl text-center text-cream font-semibold text-base hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm"
+                    style={{ fontFamily: "var(--font-serif)" }}
+                  >
+                    English
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (langGateRef.current && contentRef.current) {
+                        gsap.to(langGateRef.current, {
+                          opacity: 0, scale: 0.95, duration: 0.4, ease: "power2.in",
+                          onComplete: () => {
+                            setLang("es");
+                            setTimeout(() => {
+                              if (contentRef.current) {
+                                gsap.fromTo(contentRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
+                              }
+                            }, 50);
+                          }
+                        });
+                      } else {
+                        setLang("es");
+                      }
+                    }}
+                    className="w-full py-3.5 bg-blush/80 backdrop-blur-sm rounded-xl text-center text-sage font-semibold text-base border border-blush-dark/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm"
+                    style={{ fontFamily: "var(--font-serif)" }}
+                  >
+                    Espanol
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Main content — shown after language is chosen */}
+            {hasChosen && (
+              <div ref={contentRef}>
+                <div className="text-center">
+                  <h1 className="text-5xl font-bold text-sage tracking-[0.25em]" style={{ fontFamily: "var(--font-serif)" }}>
+                    {"BABY".split("").map((letter, i) => (
+                      <span key={i} className="baby-letter inline-block">{letter}</span>
+                    ))}
+                  </h1>
+                  <p className="text-inbloom text-4xl text-sage-light mt-2" style={{ fontFamily: "var(--font-calligraphy)" }}>
+                    in bloom
+                  </p>
+                  <div className="divider-line w-20 h-px bg-sage/30 mx-auto mt-5 mb-4" />
+                  <p className="text-cascade text-sage text-base tracking-wide" style={{ fontFamily: "var(--font-serif)" }}>
+                    celebrating the arrival of
+                  </p>
+                  <p className="text-cascade text-sage text-2xl mt-3" style={{ fontFamily: "var(--font-calligraphy)" }}>
+                    {t("home.subtitle")}
+                  </p>
+                  <p className="text-cascade text-sage/60 text-sm mt-3" style={{ fontFamily: "var(--font-serif)" }}>
+                    {t("home.date")}
+                  </p>
+                </div>
+                <div className="mt-8 space-y-3">
+                  <Link href="/photos" className="btn-animate block w-full py-3.5 bg-white/60 backdrop-blur-sm rounded-xl text-center text-sage font-semibold text-base border border-blush-dark/20 hover:bg-white/80 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                    {t("home.cta.photos")}
+                  </Link>
+                  <Link href="/game" className="btn-animate block w-full py-3.5 bg-sage/90 rounded-xl text-center text-cream font-semibold text-base hover:bg-sage hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                    {t("home.cta.game")}
+                  </Link>
+                  <Link href="/capsule" className="btn-animate block w-full py-3.5 bg-blush/80 backdrop-blur-sm rounded-xl text-center text-sage font-semibold text-base border border-blush-dark/20 hover:bg-blush hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm" style={{ fontFamily: "var(--font-serif)" }}>
+                    {t("home.cta.capsule")}
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
