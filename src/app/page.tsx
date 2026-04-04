@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 import { useLanguage } from "@/lib/LanguageContext";
@@ -603,6 +603,8 @@ export default function Home() {
   const sparklesRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const langGateRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const contentAnimated = useRef(false);
 
   /* ── GSAP falling petal loop ── */
   const startPetalLoop = useCallback(() => {
@@ -728,50 +730,6 @@ export default function Home() {
         clearProps: "opacity",
       }, 1.2);
 
-      /* — BABY letters fade up gracefully, staggered — */
-      tl.from(".baby-letter", {
-        opacity: 0,
-        y: 12,
-        duration: 0.8,
-        stagger: 0.12,
-        ease: "power3.out",
-      }, 1.6);
-
-      /* — "in bloom" gentle reveal — */
-      tl.from(".text-inbloom", {
-        opacity: 0,
-        y: 8,
-        duration: 0.9,
-        ease: "power2.out",
-      }, 2.1);
-
-      /* — Divider line grows from center — */
-      tl.from(".divider-line", {
-        scaleX: 0,
-        opacity: 0,
-        duration: 0.8,
-        ease: "power2.inOut",
-      }, 2.4);
-
-      /* — Text lines cascade softly — */
-      tl.from(".text-cascade", {
-        opacity: 0,
-        y: 8,
-        duration: 0.7,
-        stagger: 0.2,
-        ease: "power2.out",
-      }, 2.6);
-
-      /* — Buttons fade up — */
-      tl.from(".btn-animate", {
-        opacity: 0,
-        y: 12,
-        duration: 0.8,
-        stagger: 0.18,
-        ease: "power2.out",
-        clearProps: "all",
-      }, 3.0);
-
       /* ─── Continuous ambient — slow, dreamy ─── */
 
       gsap.to(".floral-top-left", {
@@ -834,6 +792,27 @@ export default function Home() {
     return () => ctx.revert();
   }, [startPetalLoop, startSparkles]);
 
+  /* ── Mount detection for hydration safety ── */
+  useEffect(() => { setMounted(true); }, []);
+
+  /* ── Animate content text when it appears ── */
+  function animateContentIn() {
+    if (contentAnimated.current) return;
+    contentAnimated.current = true;
+    const ctl = gsap.timeline();
+    ctl.from(".baby-letter", { opacity: 0, y: 12, duration: 0.8, stagger: 0.12, ease: "power3.out" }, 0);
+    ctl.from(".text-inbloom", { opacity: 0, y: 8, duration: 0.9, ease: "power2.out" }, 0.4);
+    ctl.from(".divider-line", { scaleX: 0, opacity: 0, duration: 0.8, ease: "power2.inOut" }, 0.7);
+    ctl.from(".text-cascade", { opacity: 0, y: 8, duration: 0.7, stagger: 0.2, ease: "power2.out" }, 0.9);
+    ctl.from(".btn-animate", { opacity: 0, y: 12, duration: 0.8, stagger: 0.18, ease: "power2.out", clearProps: "all" }, 1.2);
+  }
+
+  useEffect(() => {
+    if (mounted && hasChosen) {
+      setTimeout(() => animateContentIn(), 100);
+    }
+  }, [mounted, hasChosen]);
+
   return (
     <div ref={containerRef} className="min-h-screen bg-cream relative overflow-hidden flex flex-col items-center justify-center">
       <WatercolorFilters />
@@ -874,25 +853,17 @@ export default function Home() {
         <div className="relative w-full max-w-xs">
           <div className="bg-blush/40 rounded-t-[120px] rounded-b-lg px-8 pt-14 pb-10 border border-blush-dark/20">
             {/* Language gate — shown first if no language chosen */}
-            {!hasChosen && (
+            {(!mounted || !hasChosen) && (
               <div ref={langGateRef} className="flex flex-col items-center justify-center py-12">
-                <p className="text-sage/50 text-xs uppercase tracking-wider mb-2" style={{ fontFamily: "var(--font-serif)" }}>Choose your language</p>
-                <p className="text-sage/50 text-xs uppercase tracking-wider mb-8" style={{ fontFamily: "var(--font-serif)" }}>Elige tu idioma</p>
+                <p className="text-sage/70 text-xs uppercase tracking-wider mb-2" style={{ fontFamily: "var(--font-serif)" }}>Choose your language</p>
+                <p className="text-sage/70 text-xs uppercase tracking-wider mb-8" style={{ fontFamily: "var(--font-serif)" }}>Elige tu idioma</p>
                 <div className="w-full space-y-3">
                   <button
                     onClick={() => {
-                      if (langGateRef.current && contentRef.current) {
+                      if (langGateRef.current) {
                         gsap.to(langGateRef.current, {
                           opacity: 0, scale: 0.95, duration: 0.4, ease: "power2.in",
-                          onComplete: () => {
-                            setLang("en");
-                            // Animate content in after next render
-                            setTimeout(() => {
-                              if (contentRef.current) {
-                                gsap.fromTo(contentRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
-                              }
-                            }, 50);
-                          }
+                          onComplete: () => setLang("en")
                         });
                       } else {
                         setLang("en");
@@ -905,17 +876,10 @@ export default function Home() {
                   </button>
                   <button
                     onClick={() => {
-                      if (langGateRef.current && contentRef.current) {
+                      if (langGateRef.current) {
                         gsap.to(langGateRef.current, {
                           opacity: 0, scale: 0.95, duration: 0.4, ease: "power2.in",
-                          onComplete: () => {
-                            setLang("es");
-                            setTimeout(() => {
-                              if (contentRef.current) {
-                                gsap.fromTo(contentRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
-                              }
-                            }, 50);
-                          }
+                          onComplete: () => setLang("es")
                         });
                       } else {
                         setLang("es");
@@ -931,7 +895,7 @@ export default function Home() {
             )}
 
             {/* Main content — shown after language is chosen */}
-            {hasChosen && (
+            {mounted && hasChosen && (
               <div ref={contentRef}>
                 <div className="text-center">
                   <h1 className="text-5xl font-bold text-sage tracking-[0.25em]" style={{ fontFamily: "var(--font-serif)" }}>
