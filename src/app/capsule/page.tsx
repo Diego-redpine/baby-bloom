@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { getGuest, type Guest } from "@/lib/guest";
 import { useLanguage } from "@/lib/LanguageContext";
 
-type Screen = "loading" | "no-profile" | "prompt" | "recording" | "preview" | "submitting" | "done";
+type Screen = "loading" | "no-profile" | "prompt" | "ready" | "recording" | "preview" | "submitting" | "done";
 type Mode = "video" | "audio";
 
 export default function CapsulePage() {
@@ -97,7 +97,7 @@ export default function CapsulePage() {
 
   // Attach live stream to video preview element
   useEffect(() => {
-    if (screen === "recording" && mode === "video" && videoPreviewRef.current && streamRef.current) {
+    if ((screen === "ready" || screen === "recording") && mode === "video" && videoPreviewRef.current && streamRef.current) {
       videoPreviewRef.current.srcObject = streamRef.current;
     }
   }, [screen, mode]);
@@ -115,8 +115,8 @@ export default function CapsulePage() {
     return `${m}:${s}`;
   }
 
-  async function startRecording(selectedMode: Mode) {
-    // Check if browser supports recording at all
+  // Step 1: Set up camera/mic stream and go to "ready" screen
+  async function prepareStream(selectedMode: Mode) {
     if (typeof MediaRecorder === "undefined") {
       setPermissionError(t("capsule.notSupported"));
       return;
@@ -125,6 +125,7 @@ export default function CapsulePage() {
     setMode(selectedMode);
     setPermissionError(null);
     setRecordedBlob(null);
+    setPreviewUrl(null);
     setDuration(0);
     chunksRef.current = [];
 
@@ -160,46 +161,7 @@ export default function CapsulePage() {
       }
       detectedMimeTypeRef.current = mimeType;
 
-      const recorderOptions: MediaRecorderOptions = {};
-      if (mimeType) {
-        recorderOptions.mimeType = mimeType;
-      }
-
-      const recorder = new MediaRecorder(stream, recorderOptions);
-      mediaRecorderRef.current = recorder;
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunksRef.current.push(e.data);
-        }
-      };
-
-      recorder.onstop = () => {
-        const blobType = detectedMimeTypeRef.current || (selectedMode === "video" ? "video/webm" : "audio/webm");
-        const blob = new Blob(chunksRef.current, {
-          type: blobType,
-        });
-        // Revoke old preview URL if any
-        if (previewUrl) URL.revokeObjectURL(previewUrl);
-        const url = URL.createObjectURL(blob);
-        setRecordedBlob(blob);
-        setPreviewUrl(url);
-        setScreen("preview");
-      };
-
-      recorder.start();
-      setScreen("recording");
-
-      // Start timer with 120s max duration
-      const MAX_DURATION = 120;
-      const startTime = Date.now();
-      timerRef.current = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        setDuration(elapsed);
-        if (elapsed >= MAX_DURATION) {
-          stopRecording();
-        }
-      }, 1000);
+      setScreen("ready");
     } catch {
       setPermissionError(
         selectedMode === "video"
@@ -208,6 +170,52 @@ export default function CapsulePage() {
       );
       setScreen("prompt");
     }
+  }
+
+  // Step 2: Actually start recording (user taps red button)
+  function beginRecording() {
+    if (!streamRef.current) return;
+
+    chunksRef.current = [];
+    const recorderOptions: MediaRecorderOptions = {};
+    if (detectedMimeTypeRef.current) {
+      recorderOptions.mimeType = detectedMimeTypeRef.current;
+    }
+
+    const recorder = new MediaRecorder(streamRef.current, recorderOptions);
+    mediaRecorderRef.current = recorder;
+
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) {
+        chunksRef.current.push(e.data);
+      }
+    };
+
+    recorder.onstop = () => {
+      const blobType = detectedMimeTypeRef.current || (mode === "video" ? "video/webm" : "audio/webm");
+      const blob = new Blob(chunksRef.current, {
+        type: blobType,
+      });
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      const url = URL.createObjectURL(blob);
+      setRecordedBlob(blob);
+      setPreviewUrl(url);
+      setScreen("preview");
+    };
+
+    recorder.start();
+    setScreen("recording");
+
+    // Start timer with 120s max duration
+    const MAX_DURATION = 120;
+    const startTime = Date.now();
+    timerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setDuration(elapsed);
+      if (elapsed >= MAX_DURATION) {
+        stopRecording();
+      }
+    }, 1000);
   }
 
   function stopRecording() {
@@ -229,7 +237,7 @@ export default function CapsulePage() {
     setPreviewUrl(null);
     setRecordedBlob(null);
     setDuration(0);
-    startRecording(mode);
+    prepareStream(mode);
   }
 
   function handleBackToPrompt() {
@@ -344,7 +352,7 @@ export default function CapsulePage() {
 
         <div className="w-full max-w-xs flex flex-col gap-4">
           <button
-            onClick={() => startRecording("video")}
+            onClick={() => prepareStream("video")}
             className="w-full py-4 bg-white rounded-2xl shadow-lg text-sage font-semibold text-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2d5a27" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -354,7 +362,7 @@ export default function CapsulePage() {
             {t("capsule.recordVideo")}
           </button>
           <button
-            onClick={() => startRecording("audio")}
+            onClick={() => prepareStream("audio")}
             className="w-full py-4 bg-white rounded-2xl shadow-lg text-sage font-semibold text-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2d5a27" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -366,6 +374,54 @@ export default function CapsulePage() {
             {t("capsule.recordVoice")}
           </button>
         </div>
+      </div>
+    );
+  }
+
+  // Ready screen — stream is live, waiting to record
+  if (screen === "ready") {
+    return (
+      <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-5">
+        {mode === "video" ? (
+          <div className="w-full max-w-xs rounded-2xl overflow-hidden shadow-lg mb-6 bg-black">
+            <video
+              ref={videoPreviewRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full aspect-[3/4] object-cover"
+              style={{ transform: "scaleX(-1)" }}
+            />
+          </div>
+        ) : (
+          <div className="mb-6 flex flex-col items-center">
+            <div className="w-28 h-28 rounded-full bg-sage/10 flex items-center justify-center mb-4">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2d5a27" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
+              </svg>
+            </div>
+            <p className="text-sage/50 text-sm">{t("capsule.recordVoice")}</p>
+          </div>
+        )}
+
+        {/* Big red record button */}
+        <button
+          onClick={beginRecording}
+          className="w-16 h-16 rounded-full bg-red-500 border-4 border-white shadow-lg flex items-center justify-center mb-4 hover:scale-105 active:scale-95 transition-transform"
+        >
+          <div className="w-6 h-6 rounded-full bg-white" />
+        </button>
+        <p className="text-sage/50 text-xs mb-6">Tap to record</p>
+
+        <button
+          onClick={handleBackToPrompt}
+          className="text-sage/50 text-sm"
+        >
+          &larr; {t("common.back")}
+        </button>
       </div>
     );
   }
